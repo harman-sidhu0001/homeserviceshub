@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #2e5b46;
+  --color-accent: #6b7282;
+  --color-background: #f9fafb;
+  --color-error: #ef4444;
+  --color-success: #10b981;
+}
+
+/* @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"); */
+
+body {
+  width: 100%;
+}
+#root {
+  width: 100%;
+  height: 100%;
+}
+:root {
+  --color-primary: #2d5a45;
+  --color-primary-with-opacity-30: rgba(45, 90, 69, 0.3);
+}
+
+.font-playfair {
+  font-family: "Playfair Display", serif;
+}
+
+.font-inter {
+  font-family: "Inter", sans-serif;
+}
+
+.hero-span {
+  background: var(--color-primary-with-opacity-30);
+  border-radius: 10px;
+  line-height: 60px;
+  color: var(--color-primary);
+  margin: 5px;
+  padding: 0 5px;
+}
+
+.hero-search-icon {
+  position: absolute;
+  z-index: 10;
+  font-size: 1.25rem;
+  left: 15px;
+  color: lightgrey;
+}
+
+.hero-input-field {
+  font-size: 1rem;
+  border-top-left-radius: 25px !important;
+  border-bottom-left-radius: 25px !important;
+  padding-left: 40px;
+}
+
+.hero-input-field:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 20px var(--color-primary-with-opacity-30);
+}
+
+.hero-input-btn {
+  font-size: 1rem;
+  width: 130px;
+  border-radius: 25px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero-input-field {
+    font-size: 0.875rem;
+  }
+  .hero-input-btn {
+    font-size: 0.875rem;
+    width: 100px;
+  }
+}
