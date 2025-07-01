@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import HomePage from "../pages/HomePage";
+import ServicesPage from "../pages/ServicesPage";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import ProviderLoginPage from "../pages/ProviderLoginPage";
@@ -11,7 +12,7 @@ const AppRouter = () => (
   <Routes>
     {/* ✅ Public route */}
     <Route path="/" element={<HomePage />} />
-    <Route path="/services" element={<div>Services Page</div>} />
+    <Route path="/services" element={<ServicesPage />} />
     <Route path="/how-it-works" element={<div>How It Works Page</div>} />
     <Route path="/contact" element={<div>Contact Page</div>} />
 
