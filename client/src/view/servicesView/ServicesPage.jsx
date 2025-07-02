@@ -1,19 +1,22 @@
 import React from "react";
 import * as FaIcons from "react-icons/fa";
 import { FaSpinner, FaExclamationTriangle } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import { useServices } from "../../viewModel/servicesViewModel";
 
 const ServiceCard = ({ service }) => {
   const IconComponent = FaIcons[service.icon] || FaIcons.FaExclamationTriangle;
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center text-center transform hover:scale-105 transition-transform duration-300 ease-in-out">
-      <div className="text-5xl text-primary mb-4">
-        {IconComponent ? <IconComponent /> : <FaExclamationTriangle />}
+    <Link to={`/service?q=${encodeURIComponent(service.name)}&city=amritsar`}>
+      <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center text-center transform hover:scale-105 transition-transform duration-300 ease-in-out h-full">
+        <div className="text-5xl text-primary mb-4">
+          {IconComponent ? <IconComponent /> : <FaExclamationTriangle />}
+        </div>
+        <h3 className="text-xl font-bold text-gray-800 mb-2">{service.name}</h3>
+        <p className="text-gray-600 text-base">{service.description}</p>
       </div>
-      <h3 className="text-xl font-bold text-gray-800 mb-2">{service.name}</h3>
-      <p className="text-gray-600 text-base">{service.description}</p>
-    </div>
+    </Link>
   );
 };
 

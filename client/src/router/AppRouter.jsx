@@ -5,6 +5,7 @@ import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import ProviderLoginPage from "../pages/ProviderLoginPage";
 import ProviderRegisterPage from "../pages/ProviderRegisterPage";
+import ServiceProvidersPage from "../pages/ServiceProvidersPage";
 import GuestRoute from "./GuestRoute";
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -13,6 +14,7 @@ const AppRouter = () => (
     {/* ✅ Public route */}
     <Route path="/" element={<HomePage />} />
     <Route path="/services" element={<ServicesPage />} />
+    <Route path="/service" element={<ServiceProvidersPage />} />
     <Route path="/how-it-works" element={<div>How It Works Page</div>} />
     <Route path="/contact" element={<div>Contact Page</div>} />
 
