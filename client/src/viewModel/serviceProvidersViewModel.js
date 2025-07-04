@@ -39,21 +39,20 @@ export const useServiceProviders = () => {
       service: effectiveSearch,
       city,
       sortBy,
-      q: query, // So backend can prioritize q
+      q: query,
     };
 
-    await handleAsync(
-      async () => {
-        const response = await getProviders(params);
-        setCategoriesMatched(response.data.data1 || []);
-        setCompaniesMatched(response.data.data2 || []);
-      },
-      {
-        onError: (err) =>
-          setError(err.response?.data?.message || err.toString()),
-        onFinally: () => setLoading(false),
-      }
+    const { success, data, error } = await handleAsync(() =>
+      getProviders(params)
     );
+    if (success) {
+      setCategoriesMatched(data.data?.data1 || []);
+      setCompaniesMatched(data.data?.data2 || []);
+    } else {
+      setError(error?.response?.data?.message || error.toString());
+    }
+
+    setLoading(false);
   }, [serviceName, city, sortBy, query]);
 
   useEffect(() => {

@@ -1,4 +1,6 @@
-import { useForm } from "react-hook-form";
+// ✅ Updated useAuthForm with dynamic fields, availability, paymentMethods, etc.
+
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -19,6 +21,7 @@ import {
 } from "../model/validation";
 import { recoverSessionWithRefresh } from "../utils/RecoverSessionWithRefresh.js";
 import { handleAsync } from "../utils/handleAsync";
+import { getServices } from "../model/services.js";
 
 export const useAuthForm = (mode = "login", userType = "user") => {
   const dispatch = useDispatch();
@@ -27,20 +30,18 @@ export const useAuthForm = (mode = "login", userType = "user") => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedServices, setSelectedServices] = useState([]);
-
-  const serviceOptions = [
-    "Plumbing",
-    "Electrical",
-    "Cleaning",
-    "Carpentry",
-    "Painting",
-    "HVAC",
-    "Landscaping",
-    "Appliance Repair",
-    "Handyman",
-    "Moving",
-  ];
-
+  const [serviceOptions, setServiceOptions] = useState([]);
+  const getServicesdata = async () => {
+    const { success, data } = await handleAsync(getServices);
+    if (success) {
+      setServiceOptions(Array.isArray(data) ? data : []);
+    }
+  };
+  useEffect(() => {
+    if (userType === "provider" && mode === "register") {
+      getServicesdata();
+    }
+  }, []);
   const toggleService = (service) => {
     setSelectedServices((prev) =>
       prev.includes(service)
@@ -62,8 +63,26 @@ export const useAuthForm = (mode = "login", userType = "user") => {
     handleSubmit,
     formState: { errors },
     reset,
+    control,
+    setValue,
+    watch,
   } = useForm({
     resolver: zodResolver(schema),
+    defaultValues: {
+      availability: [],
+      paymentMethods: [],
+      serviceAreas: [],
+      customFields: [{ key: "", value: "" }],
+    },
+  });
+
+  const {
+    fields: customFields,
+    append: appendCustomField,
+    remove: removeCustomField,
+  } = useFieldArray({
+    control,
+    name: "customFields",
   });
 
   const submitLogic = async (data) => {
@@ -105,18 +124,18 @@ export const useAuthForm = (mode = "login", userType = "user") => {
   };
 
   const onSubmit = async (data) => {
-    console.log(userType, mode);
     setLoading(true);
-    await handleAsync(() => submitLogic(data), {
-      onError: (err) => {
-        const message =
-          err?.response?.data?.message ||
-          err.message ||
-          `${mode === "login" ? "Login" : "Registration"} failed.`;
-        setError(message);
-      },
-      onFinally: () => setLoading(false),
-    });
+    const { success, error } = await handleAsync(() => submitLogic(data));
+
+    if (!success) {
+      const message =
+        error?.response?.data?.message ||
+        error.message ||
+        `${mode === "login" ? "Login" : "Registration"} failed.`;
+      setError(message);
+    }
+
+    setLoading(false);
   };
 
   return {
@@ -130,6 +149,12 @@ export const useAuthForm = (mode = "login", userType = "user") => {
     serviceOptions,
     selectedServices,
     toggleService,
+    control,
+    setValue,
+    watch,
+    customFields,
+    appendCustomField,
+    removeCustomField,
   };
 };
 
@@ -138,26 +163,21 @@ export const useAuthCheck = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    handleAsync(
-      async () => {
-        const res = await checkAuthStatus();
-        if (res?.data?.user) {
-          dispatch(login({ user: res.data.user }));
-        } else {
-          dispatch(logout());
-        }
-      },
-      {
-        onError: async (err) => {
-          if (err?.response?.status === 401) {
-            await recoverSessionWithRefresh(dispatch);
-          } else {
-            dispatch(logout());
-          }
-        },
-        onFinally: () => setIsLoading(false),
+    const checkSession = async () => {
+      const { success, data, error } = await handleAsync(checkAuthStatus);
+
+      if (success && data?.data?.user) {
+        dispatch(login({ user: data.data.user }));
+      } else if (error?.response?.status === 401) {
+        await recoverSessionWithRefresh(dispatch);
+      } else {
+        dispatch(logout());
       }
-    );
+
+      setIsLoading(false);
+    };
+
+    checkSession();
   }, [dispatch]);
 
   return { isLoading };
@@ -170,22 +190,21 @@ export const useAuthLogout = () => {
 
   const handleLogout = async () => {
     setLoading(true);
-    await handleAsync(
-      async () => {
-        const { logoutUser } = await import("../model/auth");
-        await logoutUser();
-        dispatch(logout());
-        navigate("/");
-      },
-      {
-        onError: (err) => {
-          console.error("Logout error:", err);
-          dispatch(logout());
-          navigate("/");
-        },
-        onFinally: () => setLoading(false),
-      }
-    );
+
+    const { success, error } = await handleAsync(async () => {
+      const { logoutUser } = await import("../model/auth");
+      await logoutUser();
+      dispatch(logout());
+      navigate("/");
+    });
+
+    if (!success) {
+      console.error("Logout error:", error);
+      dispatch(logout());
+      navigate("/");
+    }
+
+    setLoading(false);
   };
 
   return { handleLogout, loading };

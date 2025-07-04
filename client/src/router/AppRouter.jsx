@@ -6,8 +6,10 @@ import RegisterPage from "../pages/RegisterPage";
 import ProviderLoginPage from "../pages/ProviderLoginPage";
 import ProviderRegisterPage from "../pages/ProviderRegisterPage";
 import ServiceProvidersPage from "../pages/ServiceProvidersPage";
-import GuestRoute from "./GuestRoute";
+import GuestRoute, { Provider } from "./GuestRoute";
 import ProtectedRoute from "./ProtectedRoute";
+import ProviderProfilePage from "../pages/ProviderProfilePage";
+import UserProfileView from "../view/userView/UserProfilePage";
 
 const AppRouter = () => (
   <Routes>
@@ -15,6 +17,7 @@ const AppRouter = () => (
     <Route path="/" element={<HomePage />} />
     <Route path="/services" element={<ServicesPage />} />
     <Route path="/service" element={<ServiceProvidersPage />} />
+    <Route path="/provider/:id" element={<ProviderProfilePage />} />
     <Route path="/how-it-works" element={<div>How It Works Page</div>} />
     <Route path="/contact" element={<div>Contact Page</div>} />
 
@@ -37,12 +40,26 @@ const AppRouter = () => (
     />
 
     {/* ✅ Guest-only routes - Provider Auth */}
-    <Route path="/provider-login" element={<ProviderLoginPage />} />
-    <Route path="/provider-register" element={<ProviderRegisterPage />} />
+    <Route
+      path="/provider-login"
+      element={
+        <Provider>
+          <ProviderLoginPage />
+        </Provider>
+      }
+    />
+    <Route
+      path="/provider-register"
+      element={
+        <Provider>
+          <ProviderRegisterPage />
+        </Provider>
+      }
+    />
 
     {/* ✅ Protected routes */}
     <Route element={<ProtectedRoute />}>
-      <Route path="/profile" element={<div>Profile Page</div>} />
+      <Route path="/profile/:id" element={<UserProfileView />} />
       <Route
         path="/request-service"
         element={<div>Request A Services Page</div>}

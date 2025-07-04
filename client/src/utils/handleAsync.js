@@ -1,16 +1,8 @@
-export const handleAsync = async (fn, { onError, onFinally } = {}) => {
+export const handleAsync = async (fn) => {
   try {
-    return await fn();
-  } catch (err) {
-    if (onError) {
-      onError(err);
-    } else {
-      console.error("Unhandled async error:", err);
-    }
-    throw err; // Optional: Rethrow if the calling code still wants to catch
-  } finally {
-    if (onFinally) {
-      onFinally();
-    }
+    const data = await fn();
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error };
   }
 };

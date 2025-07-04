@@ -1,7 +1,10 @@
+// ✅ Full MVVM-Aware Code Update for Provider Registration Form (React + React Hook Form + Zod)
+
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { IoClose } from "react-icons/io5";
+import { useFieldArray } from "react-hook-form";
 import FormInput from "../../components/common/FormInput";
 import CustomButton from "../../components/common/Button";
 import { useAuthForm } from "../../viewModel/authViewModel";
@@ -19,8 +22,16 @@ const ProviderRegisterForm = () => {
     serviceOptions,
     selectedServices,
     toggleService,
+    control,
+    customFields,
+    appendCustomField,
+    removeCustomField,
+    watch,
   } = useAuthForm("register", "provider");
 
+  const availabilityDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const paymentOptions = ["Cash", "UPI", "Card"];
+  const serviceAreas = ["Amritsar"];
   return (
     <motion.section
       initial={{ opacity: 0 }}
@@ -71,6 +82,7 @@ const ProviderRegisterForm = () => {
               type="tel"
               placeholder="Company Phone Number"
               {...register("phone")}
+              autoComplete="number"
               error={errors.phone?.message}
             />
 
@@ -78,6 +90,7 @@ const ProviderRegisterForm = () => {
               type="password"
               placeholder="Password"
               {...register("password")}
+              autoComplete="new-password"
               error={errors.password?.message}
             />
 
@@ -85,23 +98,118 @@ const ProviderRegisterForm = () => {
               type="password"
               placeholder="Confirm Password"
               {...register("confirmPassword")}
+              autoComplete="new-password"
               error={errors.confirmPassword?.message}
             />
 
+            {/* Availability Days */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Availability
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {availabilityDays.map((day) => (
+                  <label key={day} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      value={day}
+                      {...register("availability")}
+                    />
+                    <span>{day}</span>
+                  </label>
+                ))}
+              </div>
+              {errors.availability && (
+                <p className="text-red-500 text-sm">
+                  {errors.availability.message}
+                </p>
+              )}
+            </div>
+
+            {/* Year Established */}
+            <FormInput
+              type="number"
+              placeholder="Year of Establishment"
+              {...register("yearEstablished")}
+              error={errors.yearEstablished?.message}
+            />
+
+            {/* Payment Methods */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Payment Methods
+              </label>
+              <div className="flex gap-4 flex-wrap">
+                {paymentOptions.map((method) => (
+                  <label key={method} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      value={method}
+                      {...register("paymentMethods")}
+                    />
+                    <span>{method}</span>
+                  </label>
+                ))}
+              </div>
+              {errors.paymentMethods && (
+                <p className="text-red-500 text-sm">
+                  {errors.paymentMethods.message}
+                </p>
+              )}
+            </div>
+
+            {/* Service Areas */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Service Areas
+              </label>
+              <div className="border rounded p-2">
+                {serviceAreas.map((area) => (
+                  <label key={area} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      value={area}
+                      {...register("serviceAreas")}
+                    />
+                    <span>{area}</span>
+                  </label>
+                ))}
+              </div>
+              {errors.serviceAreas && (
+                <p className="text-red-500 text-sm">
+                  {errors.serviceAreas.message}
+                </p>
+              )}
+            </div>
+
+            {/* Intro */}
+            <div>
+              <textarea
+                placeholder="Short intro about your company"
+                {...register("intro")}
+                className="w-full border rounded p-2"
+                rows={3}
+              />
+              {errors.intro && (
+                <p className="text-red-500 text-sm">{errors.intro.message}</p>
+              )}
+            </div>
+
+            {/* Services */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
                 Services Offered (Select at least one)
               </label>
               <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border rounded p-3">
-                {serviceOptions.map((service) => (
-                  <label key={service} className="flex items-center space-x-2">
+                {serviceOptions.map((service, index) => (
+                  <label key={index} className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      checked={selectedServices.includes(service)}
-                      onChange={() => toggleService(service)}
+                      checked={selectedServices.includes(service.name)}
+                      onChange={() => toggleService(service.name)}
                       className="rounded border-gray-300 text-primary focus:ring-primary"
                     />
-                    <span className="text-sm">{service}</span>
+                    <span className="text-sm">{service.name}</span>
                   </label>
                 ))}
               </div>
@@ -111,12 +219,51 @@ const ProviderRegisterForm = () => {
                 </p>
               )}
             </div>
+
+            {/* Dynamic Fields */}
+            {/* <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Optional Custom Details
+              </label>
+              {customFields.map((field, index) => (
+                <div key={field.id} className="flex gap-2 items-center mb-2">
+                  <input
+                    placeholder="Key"
+                    {...register(`customFields.${index}.key`)}
+                    className="flex-1 border rounded p-1"
+                  />
+                  <input
+                    placeholder="Value"
+                    {...register(`customFields.${index}.value`)}
+                    className="flex-1 border rounded p-1"
+                  />
+                  <button
+                    type="button"
+                    className="text-red-600 text-lg"
+                    onClick={() => removeCustomField(index)}
+                  >
+                    &times;
+                  </button>
+                </div>
+              ))}
+              {customFields.length < 5 && (
+                <button
+                  type="button"
+                  onClick={() => appendCustomField({ key: "", value: "" })}
+                  className="text-primary underline text-sm"
+                >
+                  + Add Custom Field
+                </button>
+              )}
+            </div> */}
+
             <FormInput
               type="text"
               placeholder="Company Location"
               {...register("location")}
               error={errors.location?.message}
             />
+
             <CustomButton
               type="submit"
               text={loading ? "Registering..." : "Register"}

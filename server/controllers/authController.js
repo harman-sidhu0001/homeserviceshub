@@ -23,7 +23,10 @@ export const registerUser = async (req, res) => {
     const emailLower = email.toLowerCase();
     const locationLower = location.toLowerCase();
     const existing = await User.findOne({
-      $or: [{ email: emailLower }, { "providerProfile.phone": phone }],
+      $or: [
+        { "userProfile.email": emailLower },
+        { "providerProfile.phone": phone },
+      ],
     });
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -34,12 +37,13 @@ export const registerUser = async (req, res) => {
 
     if (existing?.providerProfile?.phone) {
       existing.accountType = "both";
-      existing.email = emailLower;
-      existing.passwordHash = passwordHash;
       existing.userProfile = {
         fullName,
+        email: emailLower,
+        passwordHash,
         phone,
         location: locationLower,
+        profilePhoto: "", //setURL of bucket default photo
       };
 
       // 🔒 Keep providerProfile untouched
@@ -55,12 +59,13 @@ export const registerUser = async (req, res) => {
     // ✅ Use constructor + .save()
     const newUser = new User({
       accountType: "user",
-      email: emailLower,
-      passwordHash,
       userProfile: {
         fullName,
+        email: emailLower,
+        passwordHash,
         phone,
         location: locationLower,
+        profilePhoto: "", //setURL of bucket default photo
       },
     });
 
@@ -77,82 +82,132 @@ export const registerUser = async (req, res) => {
   }
 };
 
-// Provider Signup (Business Account)
-export const registerProvider = async (req, res) => {
-  const { companyName, phone, services, password, location, email } = req.body;
+export const registerProvider = asyncHandler(async (req, res) => {
+  const {
+    companyName,
+    phone,
+    services,
+    password,
+    email,
+    location,
+    intro = "",
+    availability = [],
+    yearEstablished,
+    paymentMethods = [],
+    serviceAreas = [],
+    customFields = [],
+  } = req.body;
 
-  if (!companyName || !phone || !password) {
+  if (!companyName || !phone || !password || !services || !location) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-  const emailLower = email?.toLowerCase();
+  const providerEmail = email?.toLowerCase();
+  const locationLower = location.toLowerCase();
+  const existingByEmail = providerEmail
+    ? await User.findOne({ email: providerEmail })
+    : null;
+  const existingByPhone = await User.findOne({ "userProfile.phone": phone });
 
-  // Look for user by either email or phone in userProfile
-  const existingUser = await User.findOne({
-    $or: [
-      emailLower ? { email: emailLower } : null,
-      { "userProfile.phone": phone },
-      { "providerProfile.phone": phone },
-    ].filter(Boolean), // removes null if email isn't passed
-  });
-
-  // If user exists AND has a providerProfile, reject
-  if (existingUser && existingUser.providerProfile) {
-    return res.status(400).json({ message: "Provider already exists." });
-  }
-
+  const existing = existingByEmail || existingByPhone;
   const passwordHash = await bcrypt.hash(password, 12);
 
-  if (existingUser && !existingUser.providerProfile) {
-    // User exists but does NOT have providerProfile → upgrade
-    existingUser.accountType =
-      existingUser.accountType === "user" ? "both" : existingUser.accountType;
-
-    if (emailLower) existingUser.email = emailLower;
-
-    existingUser.providerProfile = {
-      companyName,
-      phone,
-      services,
-      location,
-      providerPass: passwordHash,
-    };
-
-    await existingUser.save();
-
-    const token = generateAccessToken(existingUser._id);
-    return res
-      .status(200)
-      .json({ token, message: "User upgraded to provider." });
+  // Convert array of customFields (e.g., [{ key: 'certification', value: 'ISO' }]) into an object
+  const otherSpecifics = {};
+  if (Array.isArray(customFields)) {
+    for (const { key, value } of customFields) {
+      if (key && value) {
+        otherSpecifics[key] = value;
+      }
+    }
   }
 
-  // No user exists → Create new provider
-  const newUser = await User.create({
-    accountType: "provider",
-    email: emailLower,
-    providerProfile: {
-      companyName,
-      phone,
-      services,
-      location,
-      providerPass: passwordHash,
+  const baseProviderProfile = {
+    companyName,
+    phone,
+    providerEmail: providerEmail || null,
+    profilePhoto: "",
+    location: locationLower,
+    intro,
+    totalReviews: 0,
+    overallRating: 0,
+    avgReviewRating: 0,
+    avgResponseTime: 0,
+    avgRequestAcceptanceRate: 0,
+    availability:
+      Array.isArray(availability) && availability.length > 0
+        ? availability
+        : ["Mon", "Tue", "Wed", "Thu", "Fri"],
+
+    projectsDone: 0,
+    yearOfEstablishment: Number(yearEstablished) || new Date().getFullYear(),
+
+    paymentMethods:
+      Array.isArray(paymentMethods) && paymentMethods.length > 0
+        ? paymentMethods
+        : ["Cash", "UPI"],
+
+    services: Array.isArray(services) ? services : [services],
+    serviceAreas:
+      Array.isArray(serviceAreas) && serviceAreas.length > 0
+        ? serviceAreas
+        : ["Amritsar"],
+
+    totalWorkers: 1,
+    gallery: [],
+    awards: [],
+    verification: {
+      status: "pending",
     },
+    ...(Object.keys(otherSpecifics).length > 0 && {
+      otherSpecifics,
+    }),
+  };
+
+  if (existing) {
+    existing.accountType = "both";
+    if (providerEmail) existing.email = providerEmail;
+    existing.passwordHash = passwordHash;
+    existing.providerProfile = baseProviderProfile;
+
+    await existing.save();
+
+    const token = generateAccessToken(existing._id);
+    const refreshToken = generateRefreshToken(existing._id);
+    await storeRefreshToken(existing._id.toString(), refreshToken);
+    setAuthCookie(res, token, refreshToken);
+
+    return res.status(200).json({ token, message: "Upgraded to both" });
+  }
+
+  const user = await User.create({
+    accountType: "provider",
+    email: providerEmail,
+    passwordHash,
+    providerProfile: baseProviderProfile,
   });
 
-  const token = generateAccessToken(newUser._id);
-  return res.status(201).json({ token });
-};
+  const token = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
+  await storeRefreshToken(user._id.toString(), refreshToken);
+  setAuthCookie(res, token, refreshToken);
+
+  return res.status(201).json({
+    token,
+    message: "Provider registration successful",
+  });
+});
 
 // Login with Email (User)
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ "userProfile.email": email });
   if (!user || user.accountType === "provider") {
     return res.status(401).json({ message: "Invalid credentials" });
   }
 
-  const match = await bcrypt.compare(password, user.passwordHash);
+  const match = await bcrypt.compare(password, user.userProfile.passwordHash);
   if (!match) return res.status(401).json({ message: "Invalid credentials" });
 
   const token = generateAccessToken(user._id);
@@ -160,7 +215,7 @@ export const loginUser = async (req, res) => {
   await storeRefreshToken(user._id.toString(), refreshToken);
   setAuthCookie(res, token, refreshToken);
   const userObj = user.toObject();
-  delete userObj.passwordHash;
+  delete userObj.userProfile.passwordHash;
   res.status(200).json({ message: "Login Successfull", user: userObj });
 };
 

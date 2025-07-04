@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import Card from "../../components/common/Card";
 
-const categories = [
+const services = [
   {
     title: "Plumber",
     description: "Fix leaks, install fixtures",
@@ -24,25 +24,25 @@ const categories = [
   },
 ];
 
-const ServiceCategories = () => (
+const ServiceServices = () => (
   <section className="py-16 bg-background">
     <div className="container mx-auto px-4">
       <h2 className="text-3xl font-bold text-center mb-8">Our Services</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {categories.map((category, index) => (
+        {services.map((service, index) => (
           <motion.div
-            key={category.title}
+            key={service.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
             <Card
-              title={category.title}
-              description={category.description}
-              image={category.image}
+              title={service.title}
+              description={service.description}
+              image={service.image}
               action={{
                 children: "Explore",
-                href: `/services/${category.title.toLowerCase()}`,
+                href: `/service?q=${service.title.toLowerCase()}&city=amritsar&sortBy=reviews`,
               }}
             />
           </motion.div>
@@ -52,4 +52,4 @@ const ServiceCategories = () => (
   </section>
 );
 
-export default ServiceCategories;
+export default ServiceServices;

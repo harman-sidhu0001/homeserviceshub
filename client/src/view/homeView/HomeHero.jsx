@@ -1,17 +1,22 @@
 import { motion } from "framer-motion";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "../../components/common/FormInput";
 import CustomButton from "../../components/common/Button";
 import { BsSearch } from "react-icons/bs";
+import { useSelector } from "react-redux";
 
 const searchSchema = z.object({
   query: z.string().min(1, "Search query is required"),
 });
 
 const HomeHero = () => {
+  const { user, role } = useSelector((state) => state.auth);
+  console.log(user, role);
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -21,7 +26,11 @@ const HomeHero = () => {
   });
 
   const onSubmit = (data) => {
-    console.log("Search:", data); // Replace with search logic later
+    const searchQuery = encodeURIComponent(data.query.trim());
+    const city = "amritsar";
+    const sortBy = "reviews"; // Default sort filter
+
+    navigate(`/service?q=${searchQuery}&city=${city}&sortBy=${sortBy}`);
   };
 
   return (

@@ -35,7 +35,7 @@ const TrendingServices = () => {
                 image={service.image}
                 action={{
                   children: "Book Now",
-                  href: `/services/${service.title.toLowerCase()}`,
+                  href: `/service?q=${service.title.toLowerCase()}&city=amritsar&sortBy=reviews`,
                 }}
               />
             </motion.div>

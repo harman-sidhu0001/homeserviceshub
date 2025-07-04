@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { FaSpinner, FaExclamationTriangle, FaSearch } from "react-icons/fa";
 import ProviderCard from "../../components/providers/ProviderCard";
 import { useServiceProviders } from "../../viewModel/serviceProvidersViewModel";
@@ -21,11 +21,20 @@ const ServiceProvidersPage = () => {
     setSortByValue,
     updateSearch,
   } = useServiceProviders();
+  const searchFormRef = useRef(null);
 
   const handleSearchSubmit = (e) => {
-    console.log(searchInputValue, cityInputValue, sortByValue);
     e.preventDefault();
     updateSearch(searchInputValue.trim(), cityInputValue.trim(), sortByValue);
+  };
+
+  const handleServiceClick = (service) => {
+    setSearchInputValue(service);
+    if (searchFormRef.current) {
+      searchFormRef.current.scrollIntoView({ behavior: "smooth" });
+      searchFormRef.current.querySelector("input[type='text']").focus();
+    }
+    updateSearch(service.trim(), cityInputValue.trim(), sortByValue);
   };
 
   const displayTerm = searchInputValue || serviceName?.replace(/-/g, " ");
@@ -70,6 +79,7 @@ const ServiceProvidersPage = () => {
 
         {/* Filters */}
         <form
+          ref={searchFormRef}
           onSubmit={handleSearchSubmit}
           className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-8 p-4 bg-white rounded-lg shadow items-center"
         >
@@ -154,7 +164,11 @@ const ServiceProvidersPage = () => {
         {selectedProviders.length > 0 ? (
           <div className="flex flex-col gap-6">
             {selectedProviders.map((provider) => (
-              <ProviderCard key={provider._id} provider={provider} />
+              <ProviderCard
+                key={provider._id}
+                provider={provider}
+                onServiceClick={handleServiceClick}
+              />
             ))}
           </div>
         ) : (

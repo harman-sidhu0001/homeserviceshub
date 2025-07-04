@@ -33,6 +33,23 @@ export const providerRegisterSchema = z
     password: z.string().min(6, "Minimum 6 characters"),
     confirmPassword: z.string().min(6, "Confirm password is required"),
     location: z.string().min(2, "Location is required"),
+    availability: z.array(z.string()).min(1, "Select at least one day"),
+    yearEstablished: z.string().regex(/^\d{4}$/, "Enter a valid year"),
+    paymentMethods: z
+      .array(z.string())
+      .min(1, "Select at least one payment method"),
+    serviceAreas: z
+      .array(z.string())
+      .min(1, "Select at least one service area"),
+    intro: z.string().max(1000, "Intro must be under 1000 characters"),
+    // customFields: z
+    //   .array(
+    //     z.object({
+    //       key: z.string().min(1),
+    //       value: z.string().min(1),
+    //     })
+    //   )
+    //   .max(5),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",

@@ -13,20 +13,16 @@ export const useServices = () => {
 
   const fetchServices = useCallback(async () => {
     setLoading(true);
-    setError(null);
-    await handleAsync(
-      async () => {
-        const servicesData = await getServices();
-        // The API returns an object { success: true, data: [...] }, so we extract the data array.
-        setServices(
-          Array.isArray(servicesData?.data?.data) ? servicesData.data.data : []
-        );
-      },
-      {
-        onError: (err) => setError(err.toString()),
-        onFinally: () => setLoading(false),
-      }
-    );
+    const { success, data, error } = await handleAsync(getServices);
+
+    if (success) {
+      setServices(Array.isArray(data) ? data : []);
+      setError(null);
+    } else {
+      setError(error.toString());
+    }
+
+    setLoading(false);
   }, []);
 
   useEffect(() => {

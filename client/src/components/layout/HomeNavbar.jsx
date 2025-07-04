@@ -19,7 +19,15 @@ const HomeNavbar = () => {
   const navItems = [
     { label: "Home", path: "/" },
     { label: "Services", path: "/services" },
-    { label: "Ace Register", path: "/provider-register" },
+    ...(role === "provider" || role === "both"
+      ? [
+          {
+            label: "Ace Profile",
+            path:
+              user && user._id ? `/provider/${user._id}` : "/provider-profile",
+          },
+        ]
+      : [{ label: "Ace Register", path: "/provider-register" }]),
     { label: "Contact", path: "/contact" },
   ];
   // Navigate to dynamic profile route

@@ -50,6 +50,7 @@ const ProviderLoginForm = () => {
               type="password"
               placeholder="Password"
               {...register("password")}
+              autoComplete="password"
               error={errors.password?.message}
             />
             <CustomButton
