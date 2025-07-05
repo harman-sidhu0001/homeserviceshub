@@ -63,19 +63,70 @@ const stats = [
   {
     label: "Availability",
     valueKey: "availability",
-    render: (v) => <span className="font-bold text-black">{v || "N/A"}</span>,
-    tooltip: "The working days of the company.",
+    render: (availability) => {
+      if (!availability || availability.length === 0) {
+        return <span className="text-gray-400">N/A</span>;
+      }
+
+      const days = [
+        { key: "M", label: "M", fullName: "Monday" },
+        { key: "T", label: "T", fullName: "Tuesday" },
+        { key: "W", label: "W", fullName: "Wednesday" },
+        { key: "T", label: "T", fullName: "Thursday" },
+        { key: "F", label: "F", fullName: "Friday" },
+        { key: "S", label: "S", fullName: "Saturday" },
+        { key: "S", label: "S", fullName: "Sunday" },
+      ];
+
+      const isDayAvailable = (dayKey, dayIndex) => {
+        // Map display letters to full day names
+        const dayMapping = {
+          M: "Mon",
+          T: dayIndex === 1 ? "Tue" : "Thu", // Tuesday vs Thursday
+          W: "Wed",
+          F: "Fri",
+          S: dayIndex === 5 ? "Sat" : "Sun", // Saturday vs Sunday
+        };
+
+        const fullDayName = dayMapping[dayKey];
+        return availability.includes(fullDayName);
+      };
+
+      return (
+        <div className="flex space-x-1">
+          {days.map((day, index) => {
+            const isAvailable = isDayAvailable(day.key, index);
+            return (
+              <span
+                key={`${day.key}-${index}`}
+                className={`
+                  font-bold text-sm cursor-default
+                  ${isAvailable ? "text-primary" : "text-gray-300"}
+                `}
+                title={`${day.fullName}: ${
+                  isAvailable ? "Available" : "Not Available"
+                }`}
+              >
+                {day.label}
+              </span>
+            );
+          })}
+        </div>
+      );
+    },
+    tooltip:
+      "The working days of the company. Blue letters indicate available days.",
   },
   {
     label: "Projects Done",
     valueKey: "projectsDone",
-    render: (v) => <span className="font-bold text-black">{v ?? "N/A"}</span>,
+    render: (v) => <span className="font-bold text-black">{v ?? "0"}</span>,
     tooltip: "The total number of projects done by company.",
   },
   {
     label: "Project Ongoing",
     valueKey: "projectsOngoing",
-    render: (v) => <span className="font-bold text-black">{v ?? "N/A"}</span>,
+    render: (v) => <span className="font-bold text-black">{v ?? "0"}</span>,
     tooltip: "The total number of ongoing projects.",
   },
 ];
@@ -91,7 +142,7 @@ const RatingsBlock = (props) => {
             <div className="text-3xl md:text-5xl font-bold text-black leading-none">
               {props.overallRating
                 ? `${Math.floor(props.overallRating)}/5`
-                : "N/A"}
+                : "0/5"}
             </div>
             <div className="text-base font-semibold text-black mt-1">
               Overall Ratings

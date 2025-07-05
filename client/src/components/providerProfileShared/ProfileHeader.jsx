@@ -12,7 +12,11 @@ const ProfileHeader = ({
 }) => (
   <div className="bg-white rounded-xl shadow flex flex-col md:flex-row items-center p-6 gap-6 mt-6">
     <img
-      src={profilePhoto}
+      src={
+        profilePhoto
+          ? profilePhoto
+          : "/assets/icons/default-profile-picture.svg"
+      }
       alt="Profile"
       className="w-32 h-32 rounded-xl object-cover border-2 border-primary"
     />

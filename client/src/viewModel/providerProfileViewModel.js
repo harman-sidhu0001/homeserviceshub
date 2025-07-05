@@ -1,45 +1,19 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { setSelectedProvider } from "../redux/slices/providerSlice";
-import { handleAsync } from "../utils/handleAsync";
-import { getProviderById } from "../model/provider";
+import {
+  getProviderById,
+  getProviderProfile,
+  getProviderServiceRequests,
+  updateServiceRequestStatus,
+  getProviderAnalytics,
+  uploadProviderProfilePhoto,
+  uploadGalleryImage,
+} from "../model/provider";
 import { useParams, useNavigate } from "react-router-dom";
 import { BsStarFill, BsStar, BsStarHalf } from "react-icons/bs";
 import { LuCircleCheckBig } from "react-icons/lu";
-
-// Mock data structure for demonstration
-const mockProvider = {
-  profilePhoto: "/assets/icons/default-profile-picture.svg",
-  companyName: "Harman AC Services",
-  location: "Amritsar, Punjab, India",
-  totalReviews: 1,
-  intro:
-    "With over 9 years of hands-on experience, I specialize in providing top-quality AC services, including repair, maintenance, and installation. Known for my technical expertise, attention to detail, and commitment to customer satisfaction, I ensure your air conditioning system operates at peak efficiency, delivering comfort and peace of mind all year round.",
-  overallRating: 4.5,
-  avgRating: 4.5,
-  reputation: 4.5,
-  responsiveness: 4.5,
-  availability: "Mon-Sat",
-  projectsDone: 1,
-  projectsOngoing: 3,
-  services: ["AC REPAIR (Split & Window)", "Installation", "Maintenance"],
-  awards: ["Ace Award 2023"],
-  serviceAreas: ["Amritsar"],
-  yearOfEstablishment: 2016,
-  paymentMethod: "Cash and Online",
-  totalWorkers: 1,
-  writtenContract: false,
-  media: [],
-  reviews: [
-    {
-      id: 1,
-      service: "AC Service",
-      stars: 5,
-      date: "May 20th 2025, 3:27:00 pm",
-      description: "Excellent Service",
-    },
-  ],
-};
+import { createDataFetcher, createUploadHandler } from "../utils/apiHandler";
 
 export const useProviderProfile = (id) => {
   const dispatch = useDispatch();
@@ -61,24 +35,17 @@ export const useProviderProfile = (id) => {
       return;
     }
 
-    const fetchProvider = async () => {
-      setLoading(true);
-      const { success, data, error } = await handleAsync(() =>
-        getProviderById(id)
-      );
-
-      if (success) {
+    const fetchProvider = createDataFetcher(
+      getProviderProfile,
+      setLoading,
+      setError,
+      (data) => {
         setProvider(data);
         dispatch(setSelectedProvider(data));
-        setError(null);
-      } else {
-        setError(error?.response?.data?.message || error.message);
       }
+    );
 
-      setLoading(false);
-    };
-
-    fetchProvider();
+    fetchProvider(id);
   }, [id, selectedProvider, isSameProvider, dispatch]);
 
   return { provider, loading, error };
@@ -87,43 +54,104 @@ export const useProviderProfile = (id) => {
 export const useProviderProfileViewModel = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  // Replace with real data fetching logic
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedTab, setSelectedTab] = useState("overview");
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [loginModal, setLoginModal] = useState(false);
+  const [serviceRequests, setServiceRequests] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setProvider(mockProvider);
-      setLoading(false);
-    }, 500);
+    if (id) {
+      const fetchProviderData = createDataFetcher(
+        getProviderProfile,
+        setLoading,
+        setError,
+        setProvider
+      );
+      fetchProviderData(id);
+    }
   }, [id]);
+
+  const fetchServiceRequests = createDataFetcher(
+    getProviderServiceRequests,
+    setLoading,
+    setError,
+    (data) => setServiceRequests(data.requests)
+  );
+
+  const fetchAnalytics = createDataFetcher(
+    getProviderAnalytics,
+    setLoading,
+    setError,
+    setAnalytics
+  );
+
+  // Create centralized upload handlers
+  const handleProfilePhotoUpload = createUploadHandler(
+    uploadProviderProfilePhoto,
+    setUploadLoading,
+    (data) => {
+      setProvider((prev) => ({
+        ...prev,
+        profilePhoto: data.profilePhoto,
+      }));
+    }
+  );
+
+  const handleGalleryUpload = createUploadHandler(
+    uploadGalleryImage,
+    setUploadLoading,
+    (data) => {
+      setProvider((prev) => ({
+        ...prev,
+        gallery: data.gallery,
+      }));
+    }
+  );
+
+  // Handle service request status update
+  const handleUpdateRequestStatus = async (
+    requestId,
+    status,
+    responseMessage = ""
+  ) => {
+    const result = await createDataFetcher(
+      updateServiceRequestStatus,
+      setLoading,
+      setError,
+      () => fetchServiceRequests(id) // Refresh service requests
+    )(requestId, { status, responseMessage });
+
+    return result;
+  };
 
   // Handlers
   const onWriteReview = () => {
     // Check auth, else show modal
     setLoginModal(true);
   };
+
   const onRequestService = () => {
     setLoginModal(true);
   };
+
   const onBookmark = () => {
     setIsBookmarked((prev) => !prev);
   };
+
   const closeLoginModal = () => setLoginModal(false);
   const handleLogin = () => navigate("/register");
 
   // Props for header
   const headerProps = {
-    profilePhoto: provider?.profilePhoto,
-    companyName: provider?.companyName,
-    location: provider?.location,
-    totalReviews: provider?.totalReviews,
+    profilePhoto: provider?.data.profilePhoto,
+    companyName: provider?.data.companyName,
+    location: provider?.data.location,
+    totalReviews: provider?.data.totalReviews,
     onWriteReview,
     onRequestService,
     onBookmark,
@@ -132,33 +160,33 @@ export const useProviderProfileViewModel = () => {
 
   // Ratings block
   const ratingsProps = {
-    overallRating: provider?.overallRating,
-    avgRating: provider?.avgRating,
-    reputation: provider?.reputation,
-    responsiveness: provider?.responsiveness,
-    availability: provider?.availability,
-    projectsDone: provider?.projectsDone,
-    projectsOngoing: provider?.projectsOngoing,
+    overallRating: provider?.data.overallRating,
+    avgRating: provider?.data.avgReviewRating,
+    reputation: provider?.data.overallRating,
+    responsiveness: provider?.data.avgResponseTime,
+    availability: provider?.data.availability,
+    projectsDone: provider?.data.projectsDone,
+    projectsOngoing: provider?.data.projectsOngoing,
   };
 
   // Reviews block
   const reviewsProps = {
-    reviews: provider?.reviews || [],
+    reviews: provider?.data.recentRequests || [],
     loading,
   };
 
   // Details block
   const detailsProps = {
-    serviceAreas: provider?.serviceAreas,
-    yearOfEstablishment: provider?.yearOfEstablishment,
-    paymentMethod: provider?.paymentMethod,
-    totalWorkers: provider?.totalWorkers,
-    writtenContract: provider?.writtenContract,
+    serviceAreas: provider?.data.serviceAreas,
+    yearOfEstablishment: provider?.data.yearOfEstablishment,
+    paymentMethod: provider?.data.paymentMethods,
+    totalWorkers: provider?.data.totalWorkers,
+    writtenContract: provider?.data.writtenContract,
   };
 
   // Gallery block
   const galleryProps = {
-    media: provider?.media || [],
+    media: provider?.data.gallery || [],
   };
 
   return {
@@ -175,5 +203,13 @@ export const useProviderProfileViewModel = () => {
     loginModal,
     closeLoginModal,
     handleLogin,
+    serviceRequests,
+    analytics,
+    uploadLoading,
+    fetchServiceRequests: () => fetchServiceRequests(id),
+    fetchAnalytics: (period = "30") => fetchAnalytics(id, { period }),
+    handleUpdateRequestStatus,
+    handleProfilePhotoUpload,
+    handleGalleryUpload,
   };
 };

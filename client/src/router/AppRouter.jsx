@@ -10,6 +10,8 @@ import GuestRoute, { Provider } from "./GuestRoute";
 import ProtectedRoute from "./ProtectedRoute";
 import ProviderProfilePage from "../pages/ProviderProfilePage";
 import UserProfileView from "../view/userView/UserProfilePage";
+import AdminLoginPage from "../pages/AdminLoginPage";
+import AdminDashboard from "../pages/AdminDashboard";
 
 const AppRouter = () => (
   <Routes>
@@ -54,6 +56,17 @@ const AppRouter = () => (
         <Provider>
           <ProviderRegisterPage />
         </Provider>
+      }
+    />
+
+    {/* ✅ Admin routes */}
+    <Route path="/admin/login" element={<AdminLoginPage />} />
+    <Route
+      path="/admin/dashboard"
+      element={
+        <ProtectedRoute>
+          <AdminDashboard />
+        </ProtectedRoute>
       }
     />
 

@@ -8,7 +8,7 @@ import CustomButton from "../../components/common/Button";
 
 const ProviderLoginForm = () => {
   const navigate = useNavigate();
-  const { register, handleSubmit, errors, onSubmit, loading, error, setError } =
+  const { register, handleSubmit, errors, onSubmit, loading, error } =
     useAuthForm("login", "provider");
 
   return (

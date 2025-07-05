@@ -1,113 +1,173 @@
 // userViewModel.js
 
-import { useState } from "react";
-
-const mockUser = {
-  name: "John Doe",
-  email: "john@example.com",
-  phone: "+1 234 567 8901",
-  profilePhoto: "/assets/icons/default-profile-picture.svg",
-};
-
-const mockProjects = [
-  {
-    id: 1,
-    name: "Kitchen Renovation",
-    location: "New York",
-    type: "Renovation",
-    timing: "2 weeks",
-    description: "Complete kitchen remodel with new cabinets and appliances.",
-    requestDate: "2024-06-20",
-    bookedForOther: false,
-    status: "Completed",
-  },
-  {
-    id: 2,
-    name: "Plumbing Fix",
-    location: "Brooklyn",
-    type: "Repair",
-    timing: "3 days",
-    description: "Fixed leaking pipes and replaced old fixtures.",
-    requestDate: "2024-06-10",
-    bookedForOther: true,
-    otherName: "Jane Smith",
-    otherNumber: "+1 987 654 3210",
-    status: "In Progress",
-  },
-];
-
-const mockReviews = [
-  {
-    id: 1,
-    serviceName: "AC Repair",
-    stars: 5,
-    date: "2024-06-15",
-    description: "Quick and professional service! Highly recommended.",
-  },
-  {
-    id: 2,
-    serviceName: "Painting",
-    stars: 4,
-    date: "2024-05-30",
-    description: "Good job, but arrived a bit late.",
-  },
-];
-
-const mockBookmarks = [
-  {
-    id: 1,
-    name: "Elite Plumbers",
-    service: "Plumbing",
-    location: "Manhattan",
-    image: "/assets/images/plumber.jpg",
-    providerId: "provider1",
-  },
-  {
-    id: 2,
-    name: "Bright Painters",
-    service: "Painting",
-    location: "Queens",
-    image: "/assets/images/painter.png",
-    providerId: "provider2",
-  },
-];
+import { useState, useEffect } from "react";
+import {
+  getUserProfileDetailed,
+  getUserServiceHistory,
+  addToBookmarks,
+  removeFromBookmarks,
+  getUserBookmarks,
+  rateService,
+  getUserAnalytics,
+  uploadProfilePhoto,
+  uploadVerificationDocuments,
+} from "../model/user";
+import {
+  createDataFetcher,
+  createUploadHandler,
+  createMultipleUploadHandler,
+} from "../utils/apiHandler";
 
 export const useUserProfile = () => {
-  const [profilePhoto, setProfilePhoto] = useState(mockUser.profilePhoto);
-  const [user] = useState(mockUser);
-  const [projects] = useState(mockProjects);
-  const [reviews] = useState(mockReviews);
-  const [bookmarks, setBookmarks] = useState(mockBookmarks);
+  const [user, setUser] = useState(null);
+  const [profilePhoto, setProfilePhoto] = useState(
+    "/assets/icons/default-profile-picture.svg"
+  );
+  const [projects, setProjects] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [bookmarks, setBookmarks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
 
-  const handlePhotoChange = (e) => {
+  // Create centralized data fetchers
+  const fetchUserProfile = createDataFetcher(
+    getUserProfileDetailed,
+    setLoading,
+    setError,
+    (data) => {
+      setUser(data.data);
+      setProfilePhoto(
+        data.data.profilePhoto
+          ? data.data.profilePhoto
+          : "/assets/icons/default-profile-picture.svg"
+      );
+      setProjects(data.serviceHistory || []);
+      setBookmarks(data.bookmarks || []);
+    }
+  );
+  const fetchServiceHistory = createDataFetcher(
+    getUserServiceHistory,
+    setLoading,
+    setError,
+    (data) => setProjects(data.requests)
+  );
+
+  const fetchBookmarks = createDataFetcher(
+    getUserBookmarks,
+    setLoading,
+    setError,
+    setBookmarks
+  );
+
+  const fetchAnalytics = createDataFetcher(
+    getUserAnalytics,
+    setLoading,
+    setError,
+    setAnalytics
+  );
+
+  // Create centralized upload handlers
+  const handlePhotoUpload = createUploadHandler(
+    uploadProfilePhoto,
+    setUploadLoading,
+    (data) => {
+      setProfilePhoto(data.profilePhoto);
+      fetchUserProfile(); // Refresh user profile
+    }
+  );
+
+  const handleVerificationUpload = createMultipleUploadHandler(
+    uploadVerificationDocuments,
+    setUploadLoading,
+    () => fetchUserProfile() // Refresh user profile
+  );
+
+  // Handle photo change
+  const handlePhotoChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      setProfilePhoto(URL.createObjectURL(file));
-      // In real app, upload file to server here
+      return await handlePhotoUpload(file);
     }
   };
 
+  // Handle verification documents upload
+  const handleVerificationUploadWrapper = async (files) => {
+    return await handleVerificationUpload(files);
+  };
+
+  // Handle bookmark operations
+  const onAddBookmark = async (providerId) => {
+    const result = await createDataFetcher(
+      addToBookmarks,
+      setLoading,
+      setError,
+      () => fetchBookmarks() // Refresh bookmarks
+    )(providerId);
+
+    return result;
+  };
+
+  const onRemoveBookmark = async (providerId) => {
+    const result = await createDataFetcher(
+      removeFromBookmarks,
+      setLoading,
+      setError,
+      () => setBookmarks((prev) => prev.filter((b) => b._id !== providerId))
+    )(providerId);
+
+    return result;
+  };
+
+  // Handle service rating
+  const onRateService = async (requestId, ratingData) => {
+    const result = await createDataFetcher(
+      rateService,
+      setLoading,
+      setError,
+      () => fetchServiceHistory() // Refresh service history
+    )(requestId, ratingData);
+
+    return result;
+  };
+
+  // Navigation handlers
   const onRequestService = (bookmark) => {
-    alert(`Request a service from ${bookmark.name}`);
+    // Navigate to service request page
+    window.location.href = `/request-service/${bookmark._id}`;
   };
 
   const onViewProfile = (bookmark) => {
-    window.location.href = `/provider/${bookmark.providerId}`;
+    window.location.href = `/provider/${bookmark._id}`;
   };
 
-  const onRemoveBookmark = (bookmark) => {
-    setBookmarks((prev) => prev.filter((b) => b.id !== bookmark.id));
-  };
+  // Initialize data on component mount
+  useEffect(() => {
+    fetchUserProfile();
+    fetchAnalytics();
+  }, []);
 
   return {
     user,
     profilePhoto,
     handlePhotoChange,
+    handleVerificationUpload: handleVerificationUploadWrapper,
     projects,
     reviews,
     bookmarks,
+    loading,
+    uploadLoading,
+    error,
+    analytics,
     onRequestService,
     onViewProfile,
+    onAddBookmark,
     onRemoveBookmark,
+    onRateService,
+    fetchUserProfile,
+    fetchServiceHistory,
+    fetchBookmarks,
+    fetchAnalytics,
   };
 };

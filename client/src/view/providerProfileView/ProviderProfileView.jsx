@@ -6,6 +6,7 @@ import RatingsBlock from "../../components/providerProfileShared/RatingsBlock";
 import ServicesBlock from "../../components/providerProfileShared/ServicesBlock";
 import ReviewsBlock from "../../components/providerProfileShared/ReviewsBlock";
 import GalleryBlock from "../../components/providerProfileShared/GalleryBlock";
+// Removed AvailabilityDisplay import since we're not using it here anymore
 import LoginModal from "../../components/models/LoginModal";
 
 const InfoCard = ({ title, value }) => (
@@ -77,13 +78,12 @@ const ProviderProfileView = () => {
         <span className="text-lg text-red-500">{vm.error}</span>
       </div>
     );
-  if (!vm.provider)
+  if (!vm.provider.data)
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <span className="text-lg text-gray-500">Provider not found.</span>
       </div>
     );
-
   return (
     <div className="bg-gray-100 min-h-screen pb-10">
       <div className="max-w-6xl mx-auto px-2 md:px-6">
@@ -99,18 +99,18 @@ const ProviderProfileView = () => {
                       About
                     </div>
                     <div className="text-gray-700 whitespace-pre-line">
-                      {vm.provider.intro}
+                      {vm.provider.data.intro}
                     </div>
                   </div>
                   <RatingsBlock {...vm.ratingsProps} />
                 </div>
                 <AwardsBlock
-                  awards={vm.provider.awards}
+                  awards={vm.provider.data.awards}
                   className="md:h-full"
                 />
               </div>
               <div className="mt-6">
-                <ServicesBlock services={vm.provider.services} />
+                <ServicesBlock services={vm.provider.data.services} />
                 <OtherDetailsBlock details={details} />
               </div>
             </>

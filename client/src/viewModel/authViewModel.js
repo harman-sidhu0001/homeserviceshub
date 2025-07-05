@@ -98,7 +98,10 @@ export const useAuthForm = (mode = "login", userType = "user") => {
       ...data,
       email: data.email?.toLowerCase(),
       location: data.location?.toLowerCase(),
-      services: userType === "provider" ? selectedServices : undefined,
+      services:
+        userType === "provider" && mode === "register"
+          ? selectedServices
+          : undefined,
     };
 
     let res;

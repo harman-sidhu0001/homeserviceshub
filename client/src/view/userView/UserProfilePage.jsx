@@ -32,7 +32,7 @@ const UserProfileView = () => {
           <Avatar
             src={profilePhoto}
             alt="Profile Photo"
-            className="w-28 h-28 border-4 border-primary shadow-lg"
+            className="w-28 h-28 border-4 border-primary shadow-lg object-cover object-top"
           />
           <label className="absolute bottom-2 right-2 bg-primary text-white rounded-full p-2 cursor-pointer shadow-md hover:bg-accent transition-colors">
             <input
@@ -46,19 +46,19 @@ const UserProfileView = () => {
         </div>
         <div className="w-full flex flex-col items-center space-y-2 z-10">
           <FormInput
-            value={user.name}
+            value={user?.fullName}
             disabled
             className="text-center font-bold text-lg bg-white/80"
             inputClassName="text-center font-bold text-lg bg-white/80"
           />
           <FormInput
-            value={user.email}
+            value={user?.email}
             disabled
             className="text-center bg-white/80"
             inputClassName="text-center bg-white/80"
           />
           <FormInput
-            value={user.phone}
+            value={user?.phone}
             disabled
             className="text-center bg-white/80"
             inputClassName="text-center bg-white/80"

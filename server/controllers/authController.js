@@ -125,6 +125,7 @@ export const registerProvider = asyncHandler(async (req, res) => {
   const baseProviderProfile = {
     companyName,
     phone,
+    passwordHash,
     providerEmail: providerEmail || null,
     profilePhoto: "",
     location: locationLower,
@@ -167,7 +168,6 @@ export const registerProvider = asyncHandler(async (req, res) => {
   if (existing) {
     existing.accountType = "both";
     if (providerEmail) existing.email = providerEmail;
-    existing.passwordHash = passwordHash;
     existing.providerProfile = baseProviderProfile;
 
     await existing.save();
@@ -183,7 +183,6 @@ export const registerProvider = asyncHandler(async (req, res) => {
   const user = await User.create({
     accountType: "provider",
     email: providerEmail,
-    passwordHash,
     providerProfile: baseProviderProfile,
   });
 
@@ -230,7 +229,7 @@ export const loginProvider = async (req, res) => {
 
   const match = await bcrypt.compare(
     password,
-    user.providerProfile.providerPass
+    user.providerProfile.passwordHash
   );
   if (!match) return res.status(401).json({ message: "Invalid credentials" });
 

@@ -1,7 +1,13 @@
 import User from "../models/User.js";
+import ServiceRequest from "../models/ServiceRequest.js";
 import bcrypt from "bcryptjs";
 import asyncHandler from "../utils/asyncHandler.js";
-import { generateAccessToken } from "../services/tokenService.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  storeRefreshToken,
+} from "../services/tokenService.js";
+import setAuthCookie from "../services/cookieService.js";
 
 // @desc    Admin login
 export const loginAdmin = asyncHandler(async (req, res) => {
@@ -9,24 +15,22 @@ export const loginAdmin = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ email });
   if (!user || user.accountType !== "admin") {
-    return res.status(401).json({ message: "Unauthorized" });
+    return res.status(401).json({ message: "Invalid credentials" });
   }
 
-  const isMatch = await bcrypt.compare(password, user.passwordHash);
-  if (!isMatch) {
+  const match = await bcrypt.compare(password, user.passwordHash);
+  if (!match) {
     return res.status(401).json({ message: "Invalid credentials" });
   }
 
   const token = generateAccessToken(user._id);
-  res.status(200).json({
-    success: true,
-    token,
-    user: {
-      id: user._id,
-      email: user.email,
-      accountType: user.accountType,
-    },
-  });
+  const refreshToken = generateRefreshToken(user._id);
+  await storeRefreshToken(user._id.toString(), refreshToken);
+  setAuthCookie(res, token, refreshToken);
+
+  const userObj = user.toObject();
+  delete userObj.passwordHash;
+  res.status(200).json({ message: "Login Successful", user: userObj });
 });
 
 // View all users (excluding admins)

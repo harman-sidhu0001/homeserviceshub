@@ -3,6 +3,7 @@ import { FaStar, FaBriefcase, FaMapMarkerAlt } from "react-icons/fa";
 import { GoVerified } from "react-icons/go";
 import { Link, useNavigate } from "react-router-dom";
 import CustomButton from "../common/Button";
+// Removed AvailabilityDisplay import since we're using inline spans now
 import { useDispatch } from "react-redux";
 import { setSelectedProvider } from "../../redux/slices/providerSlice";
 
@@ -16,6 +17,7 @@ const ProviderCard = ({ provider, onServiceClick }) => {
     about = "We are a dedicated team of professionals providing top-notch services to meet your needs.",
     isVerified = true,
     services = [],
+    availability = [],
   } = provider.providerProfile;
 
   const dispatch = useDispatch();
@@ -115,6 +117,44 @@ const ProviderCard = ({ provider, onServiceClick }) => {
                   {service}
                 </span>
               ))}
+            </div>
+          )}
+
+          {/* Availability Display */}
+          {availability && availability.length > 0 && (
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-xs text-gray-600 font-medium">
+                Available:
+              </span>
+              <div className="flex space-x-1">
+                {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => {
+                  // Map display letters to full day names
+                  const dayMapping = {
+                    M: "Mon",
+                    T: index === 1 ? "Tue" : "Thu", // Tuesday vs Thursday
+                    W: "Wed",
+                    F: "Fri",
+                    S: index === 5 ? "Sat" : "Sun", // Saturday vs Sunday
+                  };
+
+                  const fullDayName = dayMapping[day];
+                  const isAvailable = availability.includes(fullDayName);
+                  return (
+                    <span
+                      key={`${day}-${index}`}
+                      className={`
+                        font-bold text-xs
+                        ${isAvailable ? "text-primary" : "text-gray-300"}
+                      `}
+                      title={`${day}: ${
+                        isAvailable ? "Available" : "Not Available"
+                      }`}
+                    >
+                      {day}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

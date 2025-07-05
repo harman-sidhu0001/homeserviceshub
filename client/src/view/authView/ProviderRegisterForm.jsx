@@ -7,6 +7,7 @@ import { IoClose } from "react-icons/io5";
 import { useFieldArray } from "react-hook-form";
 import FormInput from "../../components/common/FormInput";
 import CustomButton from "../../components/common/Button";
+import AvailabilitySelector from "../../components/common/AvailabilitySelector";
 import { useAuthForm } from "../../viewModel/authViewModel";
 
 const ProviderRegisterForm = () => {
@@ -29,7 +30,7 @@ const ProviderRegisterForm = () => {
     watch,
   } = useAuthForm("register", "provider");
 
-  const availabilityDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  // Remove the old availability days array since we're using the new component
   const paymentOptions = ["Cash", "UPI", "Card"];
   const serviceAreas = ["Amritsar"];
   return (
@@ -103,28 +104,26 @@ const ProviderRegisterForm = () => {
             />
 
             {/* Availability Days */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Availability
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {availabilityDays.map((day) => (
-                  <label key={day} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      value={day}
-                      {...register("availability")}
-                    />
-                    <span>{day}</span>
-                  </label>
-                ))}
-              </div>
-              {errors.availability && (
-                <p className="text-red-500 text-sm">
-                  {errors.availability.message}
-                </p>
-              )}
-            </div>
+            <AvailabilitySelector
+              value={watch("availability") || []}
+              onChange={(selectedDays) => {
+                // Update the form value
+                const event = {
+                  target: {
+                    name: "availability",
+                    value: selectedDays,
+                  },
+                };
+                register("availability").onChange(event);
+              }}
+              required={true}
+              label="Availability"
+            />
+            {errors.availability && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.availability.message}
+              </p>
+            )}
 
             {/* Year Established */}
             <FormInput

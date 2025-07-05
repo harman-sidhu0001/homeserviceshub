@@ -4,13 +4,17 @@ const UserSchema = new mongoose.Schema(
   {
     accountType: {
       type: String,
-      enum: ["user", "provider", "both"],
+      enum: ["user", "provider", "both", "admin"],
       required: true,
     },
     isActive: {
       type: Boolean,
       default: true,
     },
+
+    // Admin-specific fields
+    email: String, // For admin login
+    passwordHash: String, // For admin login
 
     userProfile: {
       fullName: String,
@@ -19,6 +23,7 @@ const UserSchema = new mongoose.Schema(
       phone: String,
       profilePhoto: String,
       location: String,
+      bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     },
 
     providerProfile: {
