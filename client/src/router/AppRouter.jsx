@@ -12,6 +12,10 @@ import ProviderProfilePage from "../pages/ProviderProfilePage";
 import UserProfileView from "../view/userView/UserProfilePage";
 import AdminLoginPage from "../pages/AdminLoginPage";
 import AdminDashboard from "../pages/AdminDashboard";
+import AdminRouterCheck from "./AdminRouterCheck";
+import AdminProviderCrud from "../pages/AdminProviderCrud";
+import AdminServiceRequestCrud from "../pages/AdminServiceRequestCrud";
+import AdminUserProviderCrud from "../pages/AdminUserCrud";
 
 const AppRouter = () => (
   <Routes>
@@ -64,10 +68,19 @@ const AppRouter = () => (
     <Route
       path="/admin/dashboard"
       element={
-        <ProtectedRoute>
+        <AdminRouterCheck>
           <AdminDashboard />
-        </ProtectedRoute>
+        </AdminRouterCheck>
       }
+    />
+    <Route
+      path="/admin/dashboard/users"
+      element={<AdminUserProviderCrud type="users" />}
+    />
+    <Route path="/admin/dashboard/providers" element={<AdminProviderCrud />} />
+    <Route
+      path="/admin/dashboard/requests"
+      element={<AdminServiceRequestCrud />}
     />
 
     {/* ✅ Protected routes */}

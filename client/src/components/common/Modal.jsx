@@ -1,6 +1,8 @@
-const Modal = ({ isOpen, onClose, children }) => (
+import { AnimatePresence, motion } from "framer-motion";
+
+const Modal = ({ open, onClose, children }) => (
   <AnimatePresence>
-    {isOpen && (
+    {open && (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -10,12 +12,10 @@ const Modal = ({ isOpen, onClose, children }) => (
         <motion.div
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
+          exit={{ scale: 0.8 }}
           className="bg-white rounded-lg p-6 max-w-md w-full"
         >
           {children}
-          <button onClick={onClose} className="mt-4 text-primary">
-            Close
-          </button>
         </motion.div>
       </motion.div>
     )}

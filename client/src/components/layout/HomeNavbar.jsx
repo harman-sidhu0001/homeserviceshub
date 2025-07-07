@@ -16,23 +16,62 @@ const HomeNavbar = () => {
   const { user, role } = useAuth();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const navItems = [
+  // Navigation items based on role
+  let navItems = [
     { label: "Home", path: "/" },
     { label: "Services", path: "/services" },
-    ...(role === "provider" || role === "both"
-      ? [
-          {
-            label: "Ace Profile",
-            path:
-              user && user._id ? `/provider/${user._id}` : "/provider-profile",
-          },
-        ]
-      : [{ label: "Ace Register", path: "/provider-register" }]),
-    { label: "Contact", path: "/contact" },
+    // Ace Register or Ace Profile logic below
   ];
+  if (role === "provider") {
+    navItems.push({
+      label: "Ace Profile",
+      path: user && user._id ? `/provider/${user._id}` : "/provider-profile",
+    });
+  } else if (role === "both") {
+    navItems.push({
+      label: "Ace Profile",
+      path: user && user._id ? `/provider/${user._id}` : "/provider-profile",
+    });
+  } else {
+    // user, admin, or not logged in
+    navItems.push({ label: "Ace Register", path: "/provider-register" });
+  }
+  navItems.push({ label: "Contact", path: "/contact" });
+
+  // User menu items based on role
+  let userMenuItems = [];
+  if (role === "user") {
+    userMenuItems = [
+      { label: "Profile", path: `/profile/${user?._id || ""}` },
+      { label: "Logout", path: "#", action: handleLogout },
+    ];
+  } else if (role === "provider") {
+    userMenuItems = [
+      { label: "Provider Profile", path: `/provider/${user?._id || ""}` },
+      { label: "Logout", path: "#", action: handleLogout },
+    ];
+  } else if (role === "both") {
+    userMenuItems = [
+      { label: "Provider Profile", path: `/profile/${user?._id || ""}` }, // redirect to user profile
+      { label: "Logout", path: "#", action: handleLogout },
+    ];
+  } else if (role === "admin") {
+    userMenuItems = [
+      { label: "Login", path: "/login" },
+      { label: "Register", path: "/register" },
+    ];
+  } else {
+    userMenuItems = [
+      { label: "Login", path: "/login" },
+      { label: "Register", path: "/register" },
+    ];
+  }
+
   // Navigate to dynamic profile route
   const handleProfile = () => {
-    if (user && user._id) {
+    if (role === "provider" && user && user._id) {
+      navigate(`/provider/${user._id}`);
+    } else if ((role === "user" || role === "both") && user && user._id) {
       navigate(`/profile/${user._id}`);
     }
   };
@@ -59,23 +98,6 @@ const HomeNavbar = () => {
       console.error("Logout failed", err);
     }
   };
-  const userMenuItems = user
-    ? [
-        {
-          label: "Profile",
-          path: "#",
-          action: handleProfile,
-        },
-        {
-          label: "Logout",
-          path: "#",
-          action: handleLogout,
-        },
-      ]
-    : [
-        { label: "Login", path: "/login" },
-        { label: "Register", path: "/register" },
-      ];
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleUserMenu = () => setIsUserMenuOpen(!isUserMenuOpen);

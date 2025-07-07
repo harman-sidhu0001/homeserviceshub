@@ -20,6 +20,9 @@ export const getAllServiceRequests = (params = {}) =>
 export const deactivateUser = (userId) =>
   axiosClient.put(`/admin/user/${userId}/deactivate`);
 
+export const activateUser = (userId) =>
+  axiosClient.put(`/admin/user/${userId}/activate`);
+
 export const getTopCities = () => axiosClient.get("/admin/top-cities");
 
 export const getWeeklyTrend = () => axiosClient.get("/admin/weekly-trend");
@@ -30,3 +33,18 @@ export const adminSchema = {
   email: "",
   accountType: "admin",
 };
+
+export const updateUserByAdmin = (userId, data) =>
+  axiosClient.put(`/admin/user/${userId}`, data);
+
+export const deleteUserByAdmin = (userId) =>
+  axiosClient.delete(`/admin/user/${userId}`);
+
+export const updateProviderByAdmin = (providerId, data) =>
+  axiosClient.put(`/admin/provider/${providerId}`, data);
+
+export const deleteProviderByAdmin = (providerId) =>
+  axiosClient.delete(`/admin/provider/${providerId}`);
+
+export const activateProvider = (providerId) =>
+  axiosClient.put(`/admin/provider/${providerId}/activate`);

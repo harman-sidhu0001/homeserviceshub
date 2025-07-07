@@ -10,6 +10,7 @@ import {
   handleSingleFileUpload,
   handleMultipleFilesUpload,
 } from "../utils/uploadHandler.js";
+import { sendGmailNotification } from "../services/emailNotificationService.js";
 
 // @desc    Get logged-in user profile
 export const getUserProfile = asyncHandler(async (req, res) => {
@@ -448,4 +449,16 @@ export const getUserAnalytics = asyncHandler(async (req, res) => {
     success: true,
     data: analytics,
   });
+});
+
+// Example: Notify user on booking (add this in the relevant booking controller)
+export const notifyUserOnBooking = asyncHandler(async (req, res) => {
+  const { userEmail, serviceName } = req.body;
+  await sendGmailNotification({
+    to: userEmail,
+    subject: `Booking Confirmed for ${serviceName}`,
+    text: `Your booking for ${serviceName} is confirmed!`,
+    html: `<p>Your booking for <b>${serviceName}</b> is confirmed!</p>`,
+  });
+  res.json({ success: true, message: "Notification sent" });
 });

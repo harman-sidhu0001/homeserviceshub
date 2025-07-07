@@ -8,6 +8,12 @@ import {
   getTopCities,
   getWeeklyRequestTrend,
   loginAdmin,
+  updateUserByAdmin,
+  deleteUserByAdmin,
+  updateProviderByAdmin,
+  deleteProviderByAdmin,
+  activateUser,
+  activateProvider,
 } from "../controllers/adminController.js";
 import { authenticate } from "../middleware/authMiddleware.js";
 import { authorizeRoles } from "../middleware/roleMiddleware.js";
@@ -34,6 +40,42 @@ router.put(
   authenticate,
   authorizeRoles("admin"),
   deactivateUser
+);
+router.put(
+  "/user/:userId",
+  authenticate,
+  authorizeRoles("admin"),
+  updateUserByAdmin
+);
+router.delete(
+  "/user/:userId",
+  authenticate,
+  authorizeRoles("admin"),
+  deleteUserByAdmin
+);
+router.put(
+  "/provider/:providerId",
+  authenticate,
+  authorizeRoles("admin"),
+  updateProviderByAdmin
+);
+router.delete(
+  "/provider/:providerId",
+  authenticate,
+  authorizeRoles("admin"),
+  deleteProviderByAdmin
+);
+router.put(
+  "/user/:userId/activate",
+  authenticate,
+  authorizeRoles("admin"),
+  activateUser
+);
+router.put(
+  "/provider/:providerId/activate",
+  authenticate,
+  authorizeRoles("admin"),
+  activateProvider
 );
 router.get("/stats", authenticate, authorizeRoles("admin"), getPlatformStats);
 router.get("/top-cities", authenticate, authorizeRoles("admin"), getTopCities);

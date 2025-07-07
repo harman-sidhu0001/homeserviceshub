@@ -67,21 +67,24 @@ export const useAdminLogin = () => {
 export const useAdminDashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const {
+    user,
+    role,
+    loading: authLoading,
+  } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(false);
 
-  // Check if user is admin
   useEffect(() => {
-    if (!isAuthenticated || user?.accountType !== "admin") {
-      navigate("/admin/login", { replace: true });
+    if (!authLoading) {
+      if (!user || role !== "admin") {
+        navigate("/admin/login", { replace: true });
+      }
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [user, role, authLoading, navigate]);
 
   const handleLogout = async () => {
     setLoading(true);
-
     try {
-      // You can add logout API call here if needed
       dispatch(logout());
       navigate("/admin/login");
     } catch (error) {
@@ -93,8 +96,8 @@ export const useAdminDashboard = () => {
 
   return {
     user,
-    isAuthenticated,
-    loading,
+    role,
+    loading: loading || authLoading,
     handleLogout,
   };
 };

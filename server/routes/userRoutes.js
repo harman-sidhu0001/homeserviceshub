@@ -15,6 +15,7 @@ import {
   rateService,
   getUserAnalytics,
   listNearbyProviders,
+  notifyUserOnBooking,
 } from "../controllers/userController.js";
 
 const router = express.Router();
@@ -45,5 +46,8 @@ router.post("/rate-service/:requestId", rateService);
 
 // Location-based services
 router.get("/nearby-providers", listNearbyProviders);
+
+// Booking notification
+router.post("/notify-booking", notifyUserOnBooking);
 
 export default router;

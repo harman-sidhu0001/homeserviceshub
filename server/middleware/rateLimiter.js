@@ -9,6 +9,10 @@ export const limiter = rateLimit({
 // middleware/rateLimiter.js
 export const rateLimitPerUser = (keyPrefix, limit, seconds) => {
   return async (req, res, next) => {
+    // If admin, skip rate limiting
+    if (req.user && req.user.accountType === "admin") {
+      return next();
+    }
     const userKey = req.user?.id || req.body?.userId || req.ip; // fallback to IP if user missing
     const key = `${keyPrefix}:${userKey}`;
 

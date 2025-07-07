@@ -1,11 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useAdminDashboard } from "../viewModel/adminViewModel.js";
+import { useAdminStatsViewModel } from "../viewModel/adminStatsViewModel";
 import Card from "../components/common/Card.jsx";
 import Button from "../components/common/Button.jsx";
 import SeoHelmet from "../seo/SeoHelmet.jsx";
+import { useNavigate } from "react-router-dom";
+import CustomButton from "../components/common/Button.jsx";
 
 const AdminDashboard = () => {
   const { user, loading, handleLogout } = useAdminDashboard();
+  const {
+    stats,
+    loading: statsLoading,
+    error: statsError,
+  } = useAdminStatsViewModel();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -27,63 +36,72 @@ const AdminDashboard = () => {
                   Welcome back, {user?.email}
                 </p>
               </div>
-              <Button
+              <CustomButton
+                text={loading ? "Logging out..." : "Logout"}
                 onClick={handleLogout}
-                variant="outline"
-                loading={loading}
                 disabled={loading}
-              >
-                {loading ? "Logging out..." : "Logout"}
-              </Button>
+                width={"auto"}
+              />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Total Users
-                </h3>
-                <p className="text-3xl font-bold text-blue-600">0</p>
-              </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card
+                title="Total Users"
+                description={
+                  statsLoading
+                    ? "Loading..."
+                    : statsError
+                    ? "Error"
+                    : stats?.totalUsers ?? 0
+                }
+                className="p-6"
+              />
 
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Total Providers
-                </h3>
-                <p className="text-3xl font-bold text-green-600">0</p>
-              </Card>
+              <Card
+                title="Total Providers"
+                description={
+                  statsLoading
+                    ? "Loading..."
+                    : statsError
+                    ? "Error"
+                    : stats?.totalProviders ?? 0
+                }
+                className="p-6"
+              />
 
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Service Requests
-                </h3>
-                <p className="text-3xl font-bold text-purple-600">0</p>
-              </Card>
-
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Revenue
-                </h3>
-                <p className="text-3xl font-bold text-orange-600">₹0</p>
-              </Card>
+              <Card
+                title="Service Requests"
+                description={
+                  statsLoading
+                    ? "Loading..."
+                    : statsError
+                    ? "Error"
+                    : stats?.totalRequests ?? 0
+                }
+                className="p-6"
+              />
             </div>
 
             <div className="mt-8">
-              <Card className="p-6">
+              <div className="p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
                   Quick Actions
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Button variant="outline" className="justify-start">
-                    View All Users
-                  </Button>
-                  <Button variant="outline" className="justify-start">
-                    View All Providers
-                  </Button>
-                  <Button variant="outline" className="justify-start">
-                    View Service Requests
-                  </Button>
+                  <CustomButton
+                    text="View All Users"
+                    onClick={() => navigate("/admin/dashboard/users")}
+                  />
+                  <CustomButton
+                    text="View All Providers"
+                    onClick={() => navigate("/admin/dashboard/providers")}
+                  />
+                  <CustomButton
+                    text="View Service Requests"
+                    onClick={() => navigate("/admin/dashboard/requests")}
+                  />
                 </div>
-              </Card>
+              </div>
             </div>
           </div>
         </div>
