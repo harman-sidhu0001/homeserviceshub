@@ -40,6 +40,25 @@ const HomeNavbar = () => {
 
   // User menu items based on role
   let userMenuItems = [];
+  // Define handleLogout before using it in userMenuItems
+  const handleLogout = async () => {
+    try {
+      await axiosClient.post("/auth/logout"); // Ensure this endpoint clears cookies and Redis
+      dispatch(logoutAction());
+      setIsUserMenuOpen(false);
+      if (
+        location.pathname.startsWith("/profile") ||
+        location.pathname.startsWith("/provider") ||
+        location.pathname.startsWith("/user")
+      ) {
+        navigate("/login");
+      } else {
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error("Logout failed", err);
+    }
+  };
   if (role === "user") {
     userMenuItems = [
       { label: "Profile", path: `/profile/${user?._id || ""}` },
@@ -73,29 +92,6 @@ const HomeNavbar = () => {
       navigate(`/provider/${user._id}`);
     } else if ((role === "user" || role === "both") && user && user._id) {
       navigate(`/profile/${user._id}`);
-    }
-  };
-
-  // Call logout endpoint and handle navigation
-  const handleLogout = async () => {
-    try {
-      await axiosClient.post("/auth/logout"); // Ensure this endpoint clears cookies and Redis
-      dispatch(logoutAction());
-      setIsUserMenuOpen(false);
-
-      // Refresh current route or redirect if private
-      if (
-        location.pathname.startsWith("/profile") ||
-        location.pathname.startsWith("/provider") ||
-        location.pathname.startsWith("/user")
-      ) {
-        navigate("/login");
-      } else {
-        // If public page, no redirect needed, just update navbar
-        window.location.reload();
-      }
-    } catch (err) {
-      console.error("Logout failed", err);
     }
   };
 

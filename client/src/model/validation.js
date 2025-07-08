@@ -41,15 +41,9 @@ export const providerRegisterSchema = z
     serviceAreas: z
       .array(z.string())
       .min(1, "Select at least one service area"),
-    intro: z.string().max(1000, "Intro must be under 1000 characters"),
-    // customFields: z
-    //   .array(
-    //     z.object({
-    //       key: z.string().min(1),
-    //       value: z.string().min(1),
-    //     })
-    //   )
-    //   .max(5),
+    totalWorkers: z
+      .number({ invalid_type_error: "Enter a valid number" })
+      .min(1, "Must be at least 1 worker"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",

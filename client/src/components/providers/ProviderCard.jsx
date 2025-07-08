@@ -13,13 +13,13 @@ const ProviderCard = ({ provider, onServiceClick }) => {
     location,
     rating = 0,
     projectsCompleted = 0,
-    profilePhoto = "/assets/images/defaultBG.jpg",
+    profilePhoto,
     about = "We are a dedicated team of professionals providing top-notch services to meet your needs.",
     isVerified = true,
     services = [],
     availability = [],
   } = provider.providerProfile;
-
+  console.log(profilePhoto, "profilePhoto in ProviderCard");
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -49,7 +49,9 @@ const ProviderCard = ({ provider, onServiceClick }) => {
           <Link to={`/provider/${provider._id}`}>
             <div className="flex-shrink-0">
               <img
-                src={profilePhoto}
+                src={
+                  profilePhoto ? profilePhoto : "/assets/images/defaultBG.jpg"
+                }
                 alt={`${companyName} profile`}
                 className="w-24 h-24 rounded-full cursor-pointer object-cover"
               />

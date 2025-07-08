@@ -181,19 +181,6 @@ const ProviderRegisterForm = () => {
               )}
             </div>
 
-            {/* Intro */}
-            <div>
-              <textarea
-                placeholder="Short intro about your company"
-                {...register("intro")}
-                className="w-full border rounded p-2"
-                rows={3}
-              />
-              {errors.intro && (
-                <p className="text-red-500 text-sm">{errors.intro.message}</p>
-              )}
-            </div>
-
             {/* Services */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
@@ -261,6 +248,13 @@ const ProviderRegisterForm = () => {
               placeholder="Company Location"
               {...register("location")}
               error={errors.location?.message}
+            />
+
+            <FormInput
+              type="number"
+              placeholder="Total Workers"
+              {...register("totalWorkers", { valueAsNumber: true })}
+              error={errors.totalWorkers?.message}
             />
 
             <CustomButton

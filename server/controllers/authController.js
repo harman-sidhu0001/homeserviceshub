@@ -15,6 +15,40 @@ import asyncHandler from "../utils/asyncHandler.js";
 import setAuthCookie from "../services/cookieService.js";
 import { REFRESH_TOKEN_SECRET } from "../config/jwt.js";
 
+// Helper to auto-generate provider intro
+function generateProviderIntro({
+  companyName,
+  services,
+  location,
+  yearEstablished,
+  totalWorkers,
+  availability,
+  paymentMethods,
+}) {
+  const isSolo = totalWorkers === 1;
+  const servicesFormatted = Array.isArray(services)
+    ? services.join(", ")
+    : services;
+  const paymentFormatted = Array.isArray(paymentMethods)
+    ? paymentMethods.join(", ")
+    : paymentMethods;
+  const establishedText = yearEstablished
+    ? `, operating since ${yearEstablished}`
+    : "";
+  const availabilityText =
+    availability && availability.length > 0
+      ? ` ${isSolo ? "I'm" : "We're"} available ${
+          Array.isArray(availability) ? availability.join(", ") : availability
+        }.`
+      : "";
+
+  if (isSolo) {
+    return `Hello! ${companyName} here — I provide ${servicesFormatted} services in ${location}${establishedText}.${availabilityText} Payments accepted: ${paymentFormatted}.`;
+  } else {
+    return `Hello! ${companyName} here — We provide ${servicesFormatted} services in ${location} with a team of ${totalWorkers} professionals${establishedText}.${availabilityText} Payments accepted: ${paymentFormatted}.`;
+  }
+}
+
 // User Signup (Personal User)
 export const registerUser = async (req, res) => {
   try {
@@ -101,7 +135,6 @@ export const registerProvider = asyncHandler(async (req, res) => {
   if (!companyName || !phone || !password || !services || !location) {
     return res.status(400).json({ message: "Missing required fields" });
   }
-
   const providerEmail = email?.toLowerCase();
   const locationLower = location.toLowerCase();
   const existingByEmail = providerEmail
@@ -122,6 +155,7 @@ export const registerProvider = asyncHandler(async (req, res) => {
     }
   }
 
+  const totalWorkers = req.body.totalWorkers || 1;
   const baseProviderProfile = {
     companyName,
     phone,
@@ -129,7 +163,16 @@ export const registerProvider = asyncHandler(async (req, res) => {
     providerEmail: providerEmail || null,
     profilePhoto: "",
     location: locationLower,
-    intro,
+    // Auto-generate intro
+    intro: generateProviderIntro({
+      companyName,
+      services,
+      location: locationLower,
+      yearEstablished,
+      totalWorkers,
+      availability,
+      paymentMethods,
+    }),
     totalReviews: 0,
     overallRating: 0,
     avgReviewRating: 0,
@@ -154,7 +197,7 @@ export const registerProvider = asyncHandler(async (req, res) => {
         ? serviceAreas
         : ["Amritsar"],
 
-    totalWorkers: 1,
+    totalWorkers,
     gallery: [],
     awards: [],
     verification: {
