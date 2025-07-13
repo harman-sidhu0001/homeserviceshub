@@ -25,12 +25,12 @@ const HomeNavbar = () => {
   if (role === "provider") {
     navItems.push({
       label: "Ace Profile",
-      path: user && user._id ? `/provider/${user._id}` : "/provider-profile",
+      path: "/loggedproviderprofile",
     });
   } else if (role === "both") {
     navItems.push({
       label: "Ace Profile",
-      path: user && user._id ? `/provider/${user._id}` : "/provider-profile",
+      path: "/loggedproviderprofile",
     });
   } else {
     // user, admin, or not logged in
@@ -65,13 +65,10 @@ const HomeNavbar = () => {
       { label: "Logout", path: "#", action: handleLogout },
     ];
   } else if (role === "provider") {
-    userMenuItems = [
-      { label: "Provider Profile", path: `/provider/${user?._id || ""}` },
-      { label: "Logout", path: "#", action: handleLogout },
-    ];
+    userMenuItems = [{ label: "Logout", path: "#", action: handleLogout }];
   } else if (role === "both") {
     userMenuItems = [
-      { label: "Provider Profile", path: `/profile/${user?._id || ""}` }, // redirect to user profile
+      { label: "Profile", path: `/profile/${user?._id || ""}` },
       { label: "Logout", path: "#", action: handleLogout },
     ];
   } else if (role === "admin") {

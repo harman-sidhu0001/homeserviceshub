@@ -13,6 +13,8 @@ import userRoutes from "./routes/userRoutes.js";
 import providerRoutes from "./routes/providerRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import serviceRoute from "./routes/servicesRoutes.js";
+import bookmarkRoutes from "./routes/bookmarkRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 
 // Optional global rate limiter
 import { rateLimitPerIP } from "./middleware/rateLimiter.js";
@@ -54,6 +56,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/providers", providerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/services", serviceRoute);
+app.use("/api/bookmarks", bookmarkRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 // 404 Route
 app.use((req, res) => {

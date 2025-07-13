@@ -14,8 +14,7 @@ export const loginAdmin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
-  console.log("Admin login attempt:", { email, password });
-  console.log("User found:", user ? user : "No user found");
+
   if (!user || user.accountType !== "admin") {
     return res.status(401).json({ message: "Invalid credentials" });
   }

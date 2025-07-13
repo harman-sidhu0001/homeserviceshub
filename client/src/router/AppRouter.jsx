@@ -16,6 +16,10 @@ import AdminRouterCheck from "./AdminRouterCheck";
 import AdminProviderCrud from "../pages/AdminProviderCrud";
 import AdminServiceRequestCrud from "../pages/AdminServiceRequestCrud";
 import AdminUserProviderCrud from "../pages/AdminUserCrud";
+import LoggedProviderProfilePage from "../pages/LoggedProviderProfilePage";
+import ReviewPage from "../pages/ReviewPage";
+import ProviderReviewsView from "../view/providerProfileView/ProviderReviewsView";
+import RequestServicePage from "../pages/RequestServicePage";
 
 const AppRouter = () => (
   <Routes>
@@ -24,6 +28,10 @@ const AppRouter = () => (
     <Route path="/services" element={<ServicesPage />} />
     <Route path="/service" element={<ServiceProvidersPage />} />
     <Route path="/provider/:id" element={<ProviderProfilePage />} />
+    <Route
+      path="/loggedproviderprofile"
+      element={<LoggedProviderProfilePage />}
+    />
     <Route path="/how-it-works" element={<div>How It Works Page</div>} />
     <Route path="/contact" element={<div>Contact Page</div>} />
 
@@ -87,11 +95,13 @@ const AppRouter = () => (
     <Route element={<ProtectedRoute />}>
       <Route path="/profile/:id" element={<UserProfileView />} />
       <Route
-        path="/request-service"
-        element={<div>Request A Services Page</div>}
+        path="/request-service/:providerId"
+        element={<RequestServicePage />}
       />
       {/* <Route path="/provider-dashboard" element={<ProviderDashboard />} /> */}
     </Route>
+    <Route path="/provider/:id/review" element={<ReviewPage />} />
+    <Route path="/provider/:id/reviews" element={<ProviderReviewsView />} />
   </Routes>
 );
 

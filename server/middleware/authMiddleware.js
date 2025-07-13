@@ -12,12 +12,13 @@ export const authenticate = async (req, res, next) => {
 
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
     const user = await User.findById(decoded.id);
-
+    console.log(token, decoded, user);
     if (!user) {
       return res.status(401).json({ message: "Unauthorized: User not found" });
     }
 
     req.user = user;
+    req.authenticatedID = decoded.id;
     next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });

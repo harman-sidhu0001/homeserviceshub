@@ -165,6 +165,7 @@ const ProviderCard = ({ provider, onServiceClick }) => {
       {/* Block 2: Action Buttons (in column) */}
       <div className="flex flex-col gap-2 justify-center items-center sm:items-end">
         <CustomButton
+          onClick={() => navigate(`/request-service/${provider._id}`)}
           text={"Request a Service"}
           height={"auto"}
           width={"100%"}

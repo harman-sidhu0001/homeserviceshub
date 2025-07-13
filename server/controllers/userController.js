@@ -11,11 +11,26 @@ import {
   handleMultipleFilesUpload,
 } from "../utils/uploadHandler.js";
 import { sendGmailNotification } from "../services/emailNotificationService.js";
+import Review from "../models/Review.js";
 
 // @desc    Get logged-in user profile
 export const getUserProfile = asyncHandler(async (req, res) => {
-  const user = req.user;
-  res.status(200).json({ success: true, user });
+  const userId = req.user._id;
+  // Fetch user data as before
+  const user = await User.findById(userId).lean();
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  // Fetch reviews made by this user
+  const reviews = await Review.find({ reviewBy: userId })
+    .sort({ createdAt: -1 })
+    .populate({
+      path: "reviewTo",
+      select: "providerProfile.companyName providerProfile.profilePhoto",
+    });
+  // Attach reviews to user data
+  user.reviews = reviews;
+  res.status(200).json({ data: user });
 });
 
 // @desc    Update user profile
@@ -130,6 +145,15 @@ export const getUserProfileDetailed = asyncHandler(async (req, res) => {
     )
     .lean();
 
+  // Get user's reviews
+  const reviews = await Review.find({ reviewBy: userId })
+    .sort({ createdAt: -1 })
+    .populate({
+      path: "reviewTo",
+      select: "providerProfile.companyName providerProfile.profilePhoto",
+    })
+    .lean();
+
   const enhancedUser = {
     ...user,
     userProfile: {
@@ -140,6 +164,7 @@ export const getUserProfileDetailed = asyncHandler(async (req, res) => {
       cancelledRequests,
       serviceHistory: serviceRequests,
       bookmarks,
+      reviews,
     },
   };
 
@@ -153,7 +178,6 @@ export const getUserProfileDetailed = asyncHandler(async (req, res) => {
 export const getUserServiceHistory = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { status, page = 1, limit = 10 } = req.query;
-
   const query = { userId };
   if (status) query.status = status;
 
@@ -294,9 +318,11 @@ export const requestService = asyncHandler(async (req, res) => {
     preferredDate,
     location,
     budget,
+    propertyType,
+    timeline,
   } = req.body;
 
-  if (!providerId || !serviceName || !preferredDate) {
+  if (!providerId || !serviceName) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
@@ -315,9 +341,17 @@ export const requestService = asyncHandler(async (req, res) => {
     providerId,
     serviceName,
     description,
-    preferredDate: new Date(preferredDate),
+    preferredDate: preferredDate ? new Date(preferredDate) : new Date(),
     location,
     budget,
+    propertyType,
+    timeline,
+    customerDetails: {
+      name: req.user.userProfile?.fullName || "",
+      phone: req.user.userProfile?.phone || "",
+      address: location || "",
+      email: req.user.userProfile?.email || "",
+    },
     status: "pending",
   });
 
@@ -406,48 +440,6 @@ export const rateService = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Review submitted successfully",
-  });
-});
-
-// @desc    Get user analytics
-export const getUserAnalytics = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
-  const { period = "30" } = req.query; // days
-
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - parseInt(period));
-
-  // Get user's requests in the specified period
-  const requests = await ServiceRequest.find({
-    userId,
-    createdAt: { $gte: startDate },
-  }).lean();
-
-  // Calculate analytics
-  const analytics = {
-    totalRequests: requests.length,
-    completedRequests: requests.filter((r) => r.status === "accepted").length,
-    cancelledRequests: requests.filter((r) => r.status === "cancelled").length,
-    pendingRequests: requests.filter((r) => r.status === "pending").length,
-    averageRating:
-      requests.filter((r) => r.review?.rating).length > 0
-        ? (
-            requests
-              .filter((r) => r.review?.rating)
-              .reduce((sum, r) => sum + r.review.rating, 0) /
-            requests.filter((r) => r.review?.rating).length
-          ).toFixed(1)
-        : 0,
-    totalSpent: requests
-      .filter((r) => r.status === "accepted" && r.budget)
-      .reduce((sum, r) => sum + r.budget, 0),
-    favoriteServices: [], // Would be calculated from service requests
-    monthlyTrend: [], // Would be calculated for chart display
-  };
-
-  res.status(200).json({
-    success: true,
-    data: analytics,
   });
 });
 

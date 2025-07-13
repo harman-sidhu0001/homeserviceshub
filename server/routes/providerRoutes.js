@@ -10,6 +10,7 @@ import {
   getProviderServiceRequests,
   updateServiceRequestStatus,
   getProviderAnalytics,
+  requestProviderVerification,
 } from "../controllers/providerController.js";
 
 const router = express.Router();
@@ -24,6 +25,11 @@ router.use(authenticate);
 
 // Profile management
 router.put("/:id/profile", updateProviderProfile);
+router.post(
+  "/:id/request-verification",
+  authenticate,
+  requestProviderVerification
+);
 
 // File uploads
 router.post("/upload/profile-photo", uploadProviderProfilePhoto);

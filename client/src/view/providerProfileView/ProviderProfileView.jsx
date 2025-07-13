@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useProviderProfileViewModel } from "../../viewModel/providerProfileViewModel";
 import ProfileHeader from "../../components/providerProfileShared/ProfileHeader";
 import ProfileTabs from "../../components/providerProfileShared/ProfileTabs";
@@ -6,8 +6,11 @@ import RatingsBlock from "../../components/providerProfileShared/RatingsBlock";
 import ServicesBlock from "../../components/providerProfileShared/ServicesBlock";
 import ReviewsBlock from "../../components/providerProfileShared/ReviewsBlock";
 import GalleryBlock from "../../components/providerProfileShared/GalleryBlock";
-// Removed AvailabilityDisplay import since we're not using it here anymore
 import LoginModal from "../../components/models/LoginModal";
+import useAuth from "../../hooks/useAuth";
+import { axiosClient } from "../../utils/axiosClient";
+import { useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
 
 const InfoCard = ({ title, value }) => (
   <div className="bg-gray-100 rounded-lg p-4">
@@ -21,11 +24,6 @@ const detailsFields = [
   { key: "yearOfEstablishment", label: "Year of Established" },
   { key: "paymentMethod", label: "Payment method" },
   { key: "totalWorkers", label: "Number of workers" },
-  {
-    key: "writtenContract",
-    label: "Written Contract",
-    render: (v) => (v === true ? "Yes" : v === false ? "No" : "N/A"),
-  },
 ];
 
 const OtherDetailsBlock = ({ details }) => (
@@ -62,7 +60,55 @@ const AwardsBlock = ({ awards, className }) => (
 
 const ProviderProfileView = () => {
   const vm = useProviderProfileViewModel();
+  const navigate = useNavigate();
+  const { id: routeId } = useParams();
+  const [uploading, setUploading] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const details = useMemo(() => vm.detailsProps, [vm.detailsProps]);
+
+  // Check if the provider is bookmarked on mount
+  useEffect(() => {
+    const fetchBookmarkStatus = async () => {
+      try {
+        const res = await axiosClient.get(
+          `/bookmarks/check?providerId=${routeId}`
+        );
+        setIsBookmarked(res.data.bookmarked);
+      } catch (err) {
+        setIsBookmarked(false);
+      }
+    };
+    if (routeId) fetchBookmarkStatus();
+  }, [routeId]);
+
+  // Handler for write review navigation
+  const handleWriteReview = () => {
+    navigate(`/provider/${routeId}/review`);
+  };
+
+  // Handler for request service navigation
+  const handleRequestService = () => {
+    navigate(`/request-service/${routeId}`);
+  };
+
+  // Handler for add/remove bookmark
+  const handleBookmark = async () => {
+    setBookmarkLoading(true);
+    try {
+      if (!isBookmarked) {
+        await axiosClient.post("/bookmarks/add", { providerId: routeId });
+        setIsBookmarked(true);
+      } else {
+        await axiosClient.post("/bookmarks/remove", { providerId: routeId });
+        setIsBookmarked(false);
+      }
+    } catch (err) {
+      // Optionally show error
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
 
   if (vm.loading)
     return (
@@ -87,7 +133,15 @@ const ProviderProfileView = () => {
   return (
     <div className="bg-gray-100 min-h-screen pb-10">
       <div className="max-w-6xl mx-auto px-2 md:px-6">
-        <ProfileHeader {...vm.headerProps} />
+        <ProfileHeader
+          {...vm.headerProps}
+          onWriteReview={handleWriteReview}
+          onRequestService={handleRequestService}
+          onBookmark={handleBookmark}
+          isBookmarked={isBookmarked}
+          bookmarkLoading={bookmarkLoading}
+          // No edit or plans for public view
+        />
         <ProfileTabs selected={vm.selectedTab} onSelect={vm.setSelectedTab} />
         <div className="mt-6">
           {vm.selectedTab === "overview" && (
@@ -115,19 +169,19 @@ const ProviderProfileView = () => {
               </div>
             </>
           )}
+
           {vm.selectedTab === "reviews" && (
             <ReviewsBlock {...vm.reviewsProps} />
           )}
           {vm.selectedTab === "gallery" && (
-            <GalleryBlock {...vm.galleryProps} />
+            <GalleryBlock
+              media={vm.galleryProps.media}
+              // No add/delete/upload for public view
+              // uploading={uploading}
+            />
           )}
         </div>
       </div>
-      <LoginModal
-        show={vm.loginModal}
-        onHide={vm.closeLoginModal}
-        handleLogin={vm.handleLogin}
-      />
     </div>
   );
 };

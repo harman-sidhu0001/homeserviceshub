@@ -42,13 +42,18 @@ export const createDataFetcher = (
 };
 
 // Generic upload handler
-export const createUploadHandler = (uploadFunction, setLoading, onSuccess) => {
+export const createUploadHandler = (
+  uploadFunction,
+  setLoading,
+  onSuccess,
+  fieldName = "file"
+) => {
   return async (file) => {
     setLoading(true);
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append(fieldName, file); // Use correct field name
 
       const data = await apiCall(uploadFunction, formData);
 

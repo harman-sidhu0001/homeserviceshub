@@ -111,7 +111,6 @@ export const registerUser = async (req, res) => {
 
     return res.status(201).json({ token, message: "Registration successful" });
   } catch (error) {
-    console.error("Register error:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -159,7 +158,7 @@ export const registerProvider = asyncHandler(async (req, res) => {
   const baseProviderProfile = {
     companyName,
     phone,
-    passwordHash,
+    providerPass: passwordHash,
     providerEmail: providerEmail || null,
     profilePhoto: "",
     location: locationLower,
@@ -272,7 +271,7 @@ export const loginProvider = async (req, res) => {
 
   const match = await bcrypt.compare(
     password,
-    user.providerProfile.passwordHash
+    user.providerProfile.providerPass
   );
   if (!match) return res.status(401).json({ message: "Invalid credentials" });
 
@@ -315,7 +314,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   await user.save();
 
   // Simulate send
-  console.log(`[OTP/Reset] Token: ${token}`);
+  // console.log(`[OTP/Reset] Token: ${token}`);
 
   res.status(200).json({ success: true, message: "Reset token generated" });
 });
@@ -367,7 +366,7 @@ export const sendOTP = asyncHandler(async (req, res) => {
   await storeOTP(userId, otp);
 
   // Simulate SMS send
-  console.log(`[OTP] ${otp} sent to ${phone}`);
+  // console.log(`[OTP] ${otp} sent to ${phone}`);
 
   res.status(200).json({ success: true, message: "OTP sent" });
 });

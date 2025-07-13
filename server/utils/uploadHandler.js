@@ -135,8 +135,17 @@ export const handleGalleryUpload = (multerInstance, updateField) => {
 
       try {
         // Get current document to access existing gallery
-        const currentDoc = await User.findById(req.user._id);
-        const currentGallery = currentDoc[updateField] || [];
+        let currentGallery = [];
+        if (updateField === "providerProfile.gallery") {
+          const currentDoc = await User.findById(req.user._id);
+          currentGallery =
+            (currentDoc.providerProfile &&
+              currentDoc.providerProfile.gallery) ||
+            [];
+        } else {
+          const currentDoc = await User.findById(req.user._id);
+          currentGallery = currentDoc[updateField] || [];
+        }
 
         // Add new file to gallery
         const updatedGallery = [...currentGallery, req.file.location];

@@ -13,7 +13,6 @@ import {
   requestService,
   cancelServiceRequest,
   rateService,
-  getUserAnalytics,
   listNearbyProviders,
   notifyUserOnBooking,
 } from "../controllers/userController.js";
@@ -28,7 +27,6 @@ router.get("/profile", getUserProfile);
 router.put("/profile", updateUserProfile);
 router.get("/profile/detailed", getUserProfileDetailed);
 router.get("/service-history", getUserServiceHistory);
-router.get("/analytics", getUserAnalytics);
 
 // File uploads
 router.post("/upload-profile-photo", uploadProfilePhoto);

@@ -46,15 +46,11 @@ export const requestService = (data) =>
   axiosClient.post("/users/request-service", data);
 
 export const cancelServiceRequest = (requestId) =>
-  axiosClient.delete(`/users/request-service/${requestId}/cancel`);
+  axiosClient.put(`/users/cancel-request/${requestId}`);
 
 // Rating and reviews
 export const rateService = (requestId, data) =>
   axiosClient.post(`/users/service-requests/${requestId}/rate`, data);
-
-// Analytics
-export const getUserAnalytics = (params = {}) =>
-  axiosClient.get("/users/analytics", { params });
 
 export const userSchema = {
   id: "",

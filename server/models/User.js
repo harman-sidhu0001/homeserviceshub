@@ -23,7 +23,13 @@ const UserSchema = new mongoose.Schema(
       phone: String,
       profilePhoto: String,
       location: String,
-      bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+      bookmarks: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          default: undefined,
+        },
+      ],
     },
 
     providerProfile: {

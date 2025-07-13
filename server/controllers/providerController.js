@@ -10,6 +10,7 @@ import {
   handleSingleFileUpload,
   handleGalleryUpload,
 } from "../utils/uploadHandler.js";
+import Review from "../models/Review.js";
 
 export const getServiceProviders = asyncHandler(async (req, res) => {
   let { service, city = "amritsar", sortBy = "reviews" } = req.query;
@@ -29,7 +30,6 @@ export const getServiceProviders = asyncHandler(async (req, res) => {
   }).select("name");
 
   const matchedServiceNames = matchedServices.map((s) => s.name);
-  console.log(matchedServiceNames);
   // 🔠 Normalize all to lowercase for case-insensitive match
   const allServiceTerms = [
     ...new Set([searchTerm, ...matchedServiceNames]),
@@ -115,7 +115,6 @@ export const getServiceProviders = asyncHandler(async (req, res) => {
 
 export const getProviderById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  console.log(id);
   if (!id.match(/^[0-9a-fA-F]{24}$/)) {
     res.status(400);
     throw new Error("Invalid provider ID format.");
@@ -159,6 +158,11 @@ export const getProviderProfile = asyncHandler(async (req, res) => {
     .limit(10)
     .lean();
 
+  // Get reviews for this provider
+  const reviews = await Review.find({ reviewTo: id })
+    .sort({ createdAt: -1 })
+    .lean();
+
   // Calculate additional stats
   const totalRequests = await ServiceRequest.countDocuments({ providerId: id });
   const completedRequests = await ServiceRequest.countDocuments({
@@ -183,6 +187,7 @@ export const getProviderProfile = asyncHandler(async (req, res) => {
           ? ((completedRequests / totalRequests) * 100).toFixed(1)
           : 0,
       recentRequests: serviceRequests,
+      reviews, // <-- add reviews here
     },
   };
 
@@ -351,4 +356,23 @@ export const getProviderAnalytics = asyncHandler(async (req, res) => {
     success: true,
     data: analytics,
   });
+});
+
+// @desc    Request provider verification
+export const requestProviderVerification = asyncHandler(async (req, res) => {
+  const { authenticatedID } = req;
+
+  // Only allow the provider themselves to request verification
+  if (!req.user || req.user._id.toString()) {
+    return res.status(403).json({ message: "Unauthorized" });
+  }
+  const provider = await User.findById(authenticatedID);
+  if (!provider || !["provider", "both"].includes(provider.accountType)) {
+    return res.status(404).json({ message: "Provider not found" });
+  }
+  provider.providerProfile.verification =
+    provider.providerProfile.verification || {};
+  provider.providerProfile.verification.status = "requested";
+  await provider.save();
+  res.status(200).json({ success: true, message: "Verification requested" });
 });
