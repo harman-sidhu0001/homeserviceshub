@@ -11,6 +11,8 @@ import {
   updateServiceRequestStatus,
   getProviderAnalytics,
   requestProviderVerification,
+  createChangeRequest,
+  deleteGalleryImage,
 } from "../controllers/providerController.js";
 
 const router = express.Router();
@@ -25,15 +27,13 @@ router.use(authenticate);
 
 // Profile management
 router.put("/:id/profile", updateProviderProfile);
-router.post(
-  "/:id/request-verification",
-  authenticate,
-  requestProviderVerification
-);
+router.post("/request-verification", authenticate, requestProviderVerification);
+router.post("/change-request", authenticate, createChangeRequest);
 
 // File uploads
 router.post("/upload/profile-photo", uploadProviderProfilePhoto);
 router.post("/upload/gallery-image", uploadGalleryImage);
+router.delete("/gallery-image", authenticate, deleteGalleryImage);
 
 // Service requests management
 router.get("/:id/service-requests", getProviderServiceRequests);

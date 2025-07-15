@@ -16,6 +16,7 @@ import AdminRouterCheck from "./AdminRouterCheck";
 import AdminProviderCrud from "../pages/AdminProviderCrud";
 import AdminServiceRequestCrud from "../pages/AdminServiceRequestCrud";
 import AdminUserProviderCrud from "../pages/AdminUserCrud";
+import AdminVerificationPage from "../pages/AdminVerificationPage";
 import LoggedProviderProfilePage from "../pages/LoggedProviderProfilePage";
 import ReviewPage from "../pages/ReviewPage";
 import ProviderReviewsView from "../view/providerProfileView/ProviderReviewsView";
@@ -89,6 +90,14 @@ const AppRouter = () => (
     <Route
       path="/admin/dashboard/requests"
       element={<AdminServiceRequestCrud />}
+    />
+    <Route
+      path="/admin/dashboard/verifications"
+      element={
+        <AdminRouterCheck>
+          <AdminVerificationPage />
+        </AdminRouterCheck>
+      }
     />
 
     {/* ✅ Protected routes */}

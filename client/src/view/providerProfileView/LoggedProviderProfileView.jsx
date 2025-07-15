@@ -7,10 +7,13 @@ import ServicesBlock from "../../components/providerProfileShared/ServicesBlock"
 import ReviewsBlock from "../../components/providerProfileShared/ReviewsBlock";
 import GalleryBlock from "../../components/providerProfileShared/GalleryBlock";
 import ServiceRequestsBlock from "../../components/providerProfileShared/ServiceRequestsBlock";
+import VerificationStatus from "../../components/providerProfileShared/VerificationStatus";
 import LoginModal from "../../components/models/LoginModal";
 import ProviderEditProfileModal from "../../components/providerProfileShared/ProviderEditProfileModal";
 import useAuth from "../../hooks/useAuth";
 import { axiosClient } from "../../utils/axiosClient";
+import { useNavigate } from "react-router-dom";
+import { createChangeRequest } from "../../model/provider";
 
 const InfoCard = ({ title, value }) => (
   <div className="bg-gray-100 rounded-lg p-4">
@@ -61,36 +64,34 @@ const AwardsBlock = ({ awards, className }) => (
 const LoggedProviderProfileView = () => {
   const vm = useLoggedProviderProfileViewModel();
   const { role } = useAuth();
+  const navigate = useNavigate();
   const [editModal, setEditModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const details = useMemo(() => vm.detailsProps, [vm.detailsProps]);
   const [requestStatus, setRequestStatus] = useState(null);
-  const [requestCount, setRequestCount] = useState(0);
+  // const [requestCount, setRequestCount] = useState(10);
+  let requestCount = vm?.provider?.data?.freeChangeRequests || 10;
   const [canRequest, setCanRequest] = useState(true);
+  // New: Edit Profile handler
   const handleEditProfile = () => setEditModal(true);
   const handleCloseEdit = () => setEditModal(false);
   const handlePhotoChange = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append("photo", file);
-    try {
-      await vm.handleProfilePhotoUpload(formData);
-    } catch (err) {}
+    if (file) {
+      return await handlePhotoUpload(file);
+    }
   };
-  const handleEditProfileSubmit = async (selectedFile) => {
-    if (!selectedFile) return;
+  const handleEditProfileSubmit = async (selectedFile, changeRequestText) => {
     try {
-      await vm.handleProfilePhotoUpload(selectedFile);
+      await createChangeRequest(changeRequestText);
       setEditModal(false);
-    } catch (err) {}
+      // Optionally refresh profile data here
+    } catch (err) {
+      // Optionally show error feedback
+    }
   };
-  const handleRequestChange = (changeText) => {
-    // TODO: call API to submit change request, update status/count
-  };
-  const handleSeePlans = () => {
-    vm.navigate(`/provider/plans`);
-  };
+  // New: See Plans handler
+  const handleSeePlans = () => navigate("/provider/plans");
   const handleAddImage = () => {
     const input = document.createElement("input");
     input.type = "file";
@@ -111,8 +112,17 @@ const LoggedProviderProfileView = () => {
     };
     input.click();
   };
-  const handleDeleteImage = (idx) => {
-    // TODO: call vm.handleGalleryDelete(idx) to remove image from gallery
+
+  // Add this handler for deleting gallery images
+  const handleDeleteImage = async (imageUrl) => {
+    try {
+      await vm.handleGalleryDelete(imageUrl);
+      if (typeof vm.fetchProviderProfile === "function") {
+        await vm.fetchProviderProfile();
+      }
+    } catch (err) {
+      // Optionally show error feedback
+    }
   };
   const handleRequestVerification = async () => {
     try {
@@ -120,7 +130,31 @@ const LoggedProviderProfileView = () => {
       if (typeof vm.fetchProviderProfile === "function") {
         await vm.fetchProviderProfile();
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error("Error requesting verification:", err);
+    }
+  };
+
+  const handleReRequestVerification = async () => {
+    try {
+      await axiosClient.post("/providers/request-verification");
+      if (typeof vm.fetchProviderProfile === "function") {
+        await vm.fetchProviderProfile();
+      }
+    } catch (err) {
+      console.error("Error re-requesting verification:", err);
+    }
+  };
+
+  // Provider profile photo upload handler (like user profile)
+  const handleProfilePhoto = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      await vm.handleProfilePhotoUpload(file);
+      if (typeof vm.fetchProviderProfile === "function") {
+        await vm.fetchProviderProfile();
+      }
+    }
   };
 
   if (vm.loading)
@@ -146,41 +180,21 @@ const LoggedProviderProfileView = () => {
   return (
     <div className="bg-gray-100 min-h-screen pb-10">
       <div className="max-w-6xl mx-auto px-2 md:px-6">
-        {/* Verification warning */}
-        {vm.provider?.data?.verification?.status === "pending" && (
-          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 mb-4 rounded flex items-center justify-between">
-            <span>
-              You are not a verified user. Please get verified to build trust
-              with other people.
-            </span>
-            <button
-              className="ml-4 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-              onClick={handleRequestVerification}
-            >
-              Get Verified
-            </button>
-          </div>
-        )}
-        {vm.provider?.data?.verification?.status === "requested" && (
-          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 mb-4 rounded flex items-center justify-between">
-            <span>
-              Your verification request is pending. Please wait for admin
-              approval.
-            </span>
-            <button
-              className="ml-4 px-4 py-2 bg-yellow-400 text-white rounded cursor-not-allowed opacity-60"
-              disabled
-            >
-              Requested
-            </button>
-          </div>
-        )}
+        {/* Verification Status */}
+        <VerificationStatus
+          verificationStatus={vm.provider?.data?.verification?.status}
+          onRequestVerification={handleRequestVerification}
+          onReRequestVerification={handleReRequestVerification}
+        />
         <ProfileHeader
           {...vm.headerProps}
           onWriteReview={handleEditProfile}
           onRequestService={handleSeePlans}
           onBookmark={undefined}
           isProvider={true}
+          onEditProfile={handleEditProfile}
+          onSeePlans={handleSeePlans}
+          verificationStatus={vm.provider?.data?.verification?.status}
         />
         <ProfileTabs
           selected={vm.selectedTab}
@@ -236,11 +250,13 @@ const LoggedProviderProfileView = () => {
         <ProviderEditProfileModal
           open={editModal}
           onClose={handleCloseEdit}
-          onSubmit={handleEditProfileSubmit}
+          onSubmit={handleEditProfileSubmit} // for change request only
           profilePhoto={vm.headerProps.profilePhoto}
-          onPhotoChange={handlePhotoChange}
+          handleProfilePhoto={handleProfilePhoto}
           requestStatus={requestStatus}
-          onRequestChange={handleRequestChange}
+          onRequestChange={(changeText) =>
+            handleEditProfileSubmit(null, changeText)
+          } // for request
           canRequest={canRequest}
           requestCount={requestCount}
         />

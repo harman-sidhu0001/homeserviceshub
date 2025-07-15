@@ -112,20 +112,10 @@ const ServiceRequestsBlock = ({
                         "N/A"}
                     </p>
                     <p>
-                      <span className="font-medium">Phone:</span>{" "}
-                      {request.customerDetails?.phone ||
-                        request.userId?.userProfile?.phone ||
-                        "N/A"}
-                    </p>
-                    <p>
                       <span className="font-medium">Email:</span>{" "}
                       {request.customerDetails?.email ||
                         request.userId?.userProfile?.email ||
                         "N/A"}
-                    </p>
-                    <p>
-                      <span className="font-medium">Address:</span>{" "}
-                      {request.location || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -211,7 +201,6 @@ const ServiceRequestsBlock = ({
                   <CustomButton
                     text="Mark as Completed"
                     onClick={() => onUpdateStatus(request._id, "completed")}
-                    customClass="bg-blue-500 hover:bg-blue-600 text-white"
                   />
                 </div>
               )}

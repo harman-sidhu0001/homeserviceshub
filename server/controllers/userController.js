@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import ServiceRequest from "../models/ServiceRequest.js";
+import Review from "../models/Review.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { findNearbyProviders } from "../services/locationService.js";
 import {
@@ -11,7 +12,7 @@ import {
   handleMultipleFilesUpload,
 } from "../utils/uploadHandler.js";
 import { sendGmailNotification } from "../services/emailNotificationService.js";
-import Review from "../models/Review.js";
+import { updateReviewRatings } from "../utils/ratingCalculator.js";
 
 // @desc    Get logged-in user profile
 export const getUserProfile = asyncHandler(async (req, res) => {
@@ -418,24 +419,31 @@ export const rateService = asyncHandler(async (req, res) => {
   };
   await request.save();
 
-  // Update provider's overall rating
-  const providerReviews = await ServiceRequest.find({
-    providerId: request.providerId,
-    "review.rating": { $exists: true },
-  });
+  // Update provider ratings using the new rating system
+  const provider = await User.findById(request.providerId);
+  if (provider) {
+    // Get all reviews for this provider from the Review model
+    const allReviews = await Review.find({ reviewTo: request.providerId });
 
-  const totalRating = providerReviews.reduce(
-    (sum, req) => sum + req.review.rating,
-    0
-  );
-  const averageRating = totalRating / providerReviews.length;
+    // Prepare provider data for rating calculation
+    const providerData = {
+      ...provider.toObject(),
+      reviews: allReviews,
+      avgResponseTime: provider.providerProfile?.avgResponseTime || 0,
+      avgRequestAcceptanceRate:
+        provider.providerProfile?.avgRequestAcceptanceRate || 0,
+    };
 
-  await User.findByIdAndUpdate(request.providerId, {
-    $set: {
-      "providerProfile.overallRating": averageRating,
-      "providerProfile.totalReviews": providerReviews.length,
-    },
-  });
+    // Calculate updated review ratings only
+    const ratingsUpdated = updateReviewRatings(providerData);
+
+    // Update provider with new review ratings
+    await User.findByIdAndUpdate(request.providerId, {
+      "providerProfile.avgReviewRating": ratingsUpdated.avgReviewRating,
+      "providerProfile.overallRating": ratingsUpdated.overallRating,
+      "providerProfile.totalReviews": allReviews.length,
+    });
+  }
 
   res.status(200).json({
     success: true,

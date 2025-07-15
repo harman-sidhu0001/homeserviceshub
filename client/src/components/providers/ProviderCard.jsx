@@ -15,10 +15,12 @@ const ProviderCard = ({ provider, onServiceClick }) => {
     projectsCompleted = 0,
     profilePhoto,
     about = "We are a dedicated team of professionals providing top-notch services to meet your needs.",
-    isVerified = true,
+    verification,
     services = [],
     availability = [],
   } = provider.providerProfile;
+
+  const isVerified = verification?.status === "verified";
   console.log(profilePhoto, "profilePhoto in ProviderCard");
   const dispatch = useDispatch();
   const navigate = useNavigate();

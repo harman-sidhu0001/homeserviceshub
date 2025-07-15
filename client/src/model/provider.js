@@ -22,6 +22,7 @@ export const getProviderAnalytics = (id, params = {}) =>
 // File upload operations
 export const uploadProviderProfilePhoto = (formData) =>
   axiosClient.post("/providers/upload/profile-photo", formData, {
+    withCredentials: true,
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -33,6 +34,13 @@ export const uploadGalleryImage = (formData) =>
       "Content-Type": "multipart/form-data",
     },
   });
+
+export const createChangeRequest = (description) =>
+  axiosClient.post(
+    "/providers/change-request",
+    { description },
+    { withCredentials: true }
+  );
 
 // Service providers search
 export const getServiceProviders = (params = {}) =>

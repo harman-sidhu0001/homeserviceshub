@@ -48,3 +48,20 @@ export const deleteProviderByAdmin = (providerId) =>
 
 export const activateProvider = (providerId) =>
   axiosClient.put(`/admin/provider/${providerId}/activate`);
+
+// Verification management APIs
+export const getAllVerificationRequests = (params = {}) =>
+  axiosClient.get("/admin/verification-requests", { params });
+
+export const updateProviderVerificationStatus = (providerId, data) =>
+  axiosClient.put(`/admin/provider/${providerId}/verification-status`, data);
+
+export const getVerificationStats = () =>
+  axiosClient.get("/admin/verification-stats");
+
+// Upload verification documents and verify provider
+export const verifyProviderWithDocs = (providerId, formData) =>
+  axiosClient.post(`/admin/provider/${providerId}/verify`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    withCredentials: true,
+  });

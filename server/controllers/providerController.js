@@ -9,8 +9,11 @@ import {
 import {
   handleSingleFileUpload,
   handleGalleryUpload,
+  deleteS3Object,
 } from "../utils/uploadHandler.js";
 import Review from "../models/Review.js";
+import { updateServiceRequestRatings } from "../utils/ratingCalculator.js";
+import ChangeRequest from "../models/ChangeRequest.js";
 
 export const getServiceProviders = asyncHandler(async (req, res) => {
   let { service, city = "amritsar", sortBy = "reviews" } = req.query;
@@ -238,6 +241,28 @@ export const uploadGalleryImage = handleGalleryUpload(
   "providerProfile.gallery"
 );
 
+// @desc    Delete gallery image (S3 + DB)
+export const deleteGalleryImage = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { imageUrl } = req.body;
+
+  if (!imageUrl) {
+    return res.status(400).json({ message: "Image URL is required" });
+  }
+
+  // Remove from S3
+  await deleteS3Object(imageUrl);
+
+  // Remove from DB
+  await User.findByIdAndUpdate(
+    userId,
+    { $pull: { "providerProfile.gallery": imageUrl } },
+    { new: true }
+  );
+
+  res.status(200).json({ success: true, message: "Image deleted" });
+});
+
 // @desc    Get provider service requests
 export const getProviderServiceRequests = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -280,14 +305,16 @@ export const getProviderServiceRequests = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Update service request status (accept/reject)
+// @desc    Update service request status (accept/reject/complete)
 export const updateServiceRequestStatus = asyncHandler(async (req, res) => {
   const { requestId } = req.params;
   const { status, responseMessage } = req.body;
 
-  if (!["accepted", "rejected"].includes(status)) {
+  if (!["accepted", "rejected", "completed"].includes(status)) {
     res.status(400);
-    throw new Error("Invalid status. Must be 'accepted' or 'rejected'.");
+    throw new Error(
+      "Invalid status. Must be 'accepted', 'rejected', or 'completed'."
+    );
   }
 
   const request = await ServiceRequest.findById(requestId);
@@ -296,15 +323,54 @@ export const updateServiceRequestStatus = asyncHandler(async (req, res) => {
     throw new Error("Service request not found.");
   }
 
-  // Update request status
+  const previousStatus = request.status;
+
+  // Update request status and response time
   request.status = status;
+  request.responseTime = new Date();
   if (responseMessage) request.responseMessage = responseMessage;
   await request.save();
 
-  // Update provider stats if accepted
+  // Update provider stats based on status
   if (status === "accepted") {
+    // When provider accepts a request, increment ongoing projects
     await User.findByIdAndUpdate(request.providerId, {
       $inc: { "providerProfile.projectsOngoing": 1 },
+    });
+  } else if (status === "completed") {
+    // When provider marks as completed, decrement ongoing and increment completed
+    await User.findByIdAndUpdate(request.providerId, {
+      $inc: {
+        "providerProfile.projectsOngoing": -1,
+        "providerProfile.projectsDone": 1,
+      },
+    });
+  }
+
+  // Update provider ratings
+  const provider = await User.findById(request.providerId);
+  if (provider) {
+    // Get all service requests for this provider
+    const allRequests = await ServiceRequest.find({
+      providerId: request.providerId,
+    });
+
+    // Prepare provider data for rating calculation
+    const providerData = {
+      ...provider.toObject(),
+      requests: allRequests,
+      avgReviewRating: provider.providerProfile?.avgReviewRating || 0,
+    };
+
+    // Calculate updated service request ratings (response time and acceptance rate)
+    const ratingsUpdated = updateServiceRequestRatings(providerData);
+
+    // Update provider with new service request ratings
+    await User.findByIdAndUpdate(request.providerId, {
+      "providerProfile.avgResponseTime": ratingsUpdated.avgResponseTime,
+      "providerProfile.avgRequestAcceptanceRate":
+        ratingsUpdated.avgRequestAcceptanceRate,
+      "providerProfile.overallRating": ratingsUpdated.overallRating,
     });
   }
 
@@ -358,21 +424,101 @@ export const getProviderAnalytics = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Request provider verification
+// @desc    Request provider verification (pending -> requested)
 export const requestProviderVerification = asyncHandler(async (req, res) => {
   const { authenticatedID } = req;
 
   // Only allow the provider themselves to request verification
-  if (!req.user || req.user._id.toString()) {
+  if (!req.user || req.user._id.toString() !== authenticatedID) {
     return res.status(403).json({ message: "Unauthorized" });
   }
+
   const provider = await User.findById(authenticatedID);
   if (!provider || !["provider", "both"].includes(provider.accountType)) {
     return res.status(404).json({ message: "Provider not found" });
   }
-  provider.providerProfile.verification =
-    provider.providerProfile.verification || {};
+
+  // Initialize verification object if it doesn't exist
+  if (!provider.providerProfile.verification) {
+    provider.providerProfile.verification = {};
+  }
+
+  const currentStatus = provider.providerProfile.verification.status;
+
+  // Only allow requesting verification if status is 'pending' or 'rejected'
+  if (currentStatus === "requested") {
+    return res.status(400).json({
+      message: "Verification already requested. Please wait for admin review.",
+    });
+  }
+
+  if (currentStatus === "verified") {
+    return res.status(400).json({
+      message: "You are already verified.",
+    });
+  }
+
+  // Update status to requested
   provider.providerProfile.verification.status = "requested";
+  provider.providerProfile.verification.requestedAt = new Date();
+
   await provider.save();
-  res.status(200).json({ success: true, message: "Verification requested" });
+
+  res.status(200).json({
+    success: true,
+    message:
+      currentStatus === "rejected"
+        ? "Verification re-requested successfully"
+        : "Verification requested successfully",
+    data: {
+      status: provider.providerProfile.verification.status,
+      requestedAt: provider.providerProfile.verification.requestedAt,
+    },
+  });
 });
+
+export const createChangeRequest = async (req, res) => {
+  try {
+    const { description } = req.body;
+    const providerId = req.authenticatedID; // assuming auth middleware sets req.user
+    if (!description) {
+      return res.status(400).json({ message: "Description is required." });
+    }
+    // Fetch provider
+    const provider = await User.findById(providerId);
+    if (!provider) {
+      return res.status(404).json({ message: "Provider not found." });
+    }
+
+    // Ensure object exists
+    if (!provider.providerProfile) {
+      provider.providerProfile = {};
+    }
+
+    // Handle freeChangeRequests logic and tag
+    let tag = "paid";
+    if (provider.providerProfile.freeChangeRequests !== undefined) {
+      if (provider.providerProfile.freeChangeRequests > 0) {
+        provider.providerProfile.freeChangeRequests -= 1;
+        tag = "free";
+      } else {
+        provider.providerProfile.freeChangeRequests = 0;
+        tag = "paid";
+      }
+    } else {
+      provider.providerProfile.freeChangeRequests = 9;
+      tag = "free";
+    }
+    provider.markModified("providerProfile");
+    await provider.save();
+
+    const changeRequest = await ChangeRequest.create({
+      providerId,
+      description,
+      tag,
+    });
+    res.status(201).json({ success: true, data: changeRequest });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

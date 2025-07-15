@@ -181,27 +181,24 @@ export const registerProvider = asyncHandler(async (req, res) => {
       Array.isArray(availability) && availability.length > 0
         ? availability
         : ["Mon", "Tue", "Wed", "Thu", "Fri"],
-
     projectsDone: 0,
     yearOfEstablishment: Number(yearEstablished) || new Date().getFullYear(),
-
     paymentMethods:
       Array.isArray(paymentMethods) && paymentMethods.length > 0
         ? paymentMethods
         : ["Cash", "UPI"],
-
     services: Array.isArray(services) ? services : [services],
     serviceAreas:
       Array.isArray(serviceAreas) && serviceAreas.length > 0
         ? serviceAreas
         : ["Amritsar"],
-
     totalWorkers,
     gallery: [],
     awards: [],
     verification: {
       status: "pending",
     },
+    freeChangeRequests: 10,
     ...(Object.keys(otherSpecifics).length > 0 && {
       otherSpecifics,
     }),

@@ -37,17 +37,6 @@ const AdminServiceRequestCrudView = ({
             <span>
               {req._id} - {req.status}
             </span>
-            <div className="flex gap-2">
-              <CustomButton text="Edit" onClick={() => {}} />
-              <CustomButton
-                text="Deactivate"
-                onClick={() => handleDeactivate(req._id)}
-              />
-              <CustomButton
-                text="Delete"
-                onClick={() => handleDelete(req._id)}
-              />
-            </div>
           </li>
         ))}
       </ul>

@@ -42,9 +42,13 @@ const UserSchema = new mongoose.Schema(
       intro: String,
       totalReviews: Number,
       overallRating: Number,
+      avgRating: Number,
+      avgResponsiveness: Number,
+      avgReputation: Number,
       avgReviewRating: Number,
       avgResponseTime: Number,
       avgRequestAcceptanceRate: Number,
+      freeChangeRequests: { type: Number, default: undefined },
       availability: { type: [String], default: undefined },
       projectsDone: Number,
       projectsOngoing: Number,
@@ -62,6 +66,9 @@ const UserSchema = new mongoose.Schema(
           enum: ["pending", "requested", "verified", "rejected"],
           default: undefined,
         },
+        adminNotes: String,
+        statusUpdatedAt: Date,
+        requestedAt: Date,
         idProof: {
           aadhaarFront: {
             documentName: String,
@@ -78,6 +85,10 @@ const UserSchema = new mongoose.Schema(
           gstNumber: String,
         },
       },
+      // Rating system trigger flags
+      newReviewAdded: { type: Boolean, default: false },
+      newRequestResponseAdded: { type: Boolean, default: false },
+      newStatusChange: { type: Boolean, default: false },
       otherSpecifics: {
         type: mongoose.Schema.Types.Mixed,
         default: undefined,

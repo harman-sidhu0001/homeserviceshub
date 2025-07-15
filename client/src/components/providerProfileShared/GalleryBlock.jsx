@@ -51,7 +51,7 @@ const GalleryBlock = ({ media, onAddImage, onDeleteImage, uploading }) => {
               {onDeleteImage && (
                 <button
                   className="absolute top-2 right-2 bg-red-500 text-white rounded-full px-2 py-1 text-xs hover:bg-red-700"
-                  onClick={() => onDeleteImage(idx)}
+                  onClick={() => onDeleteImage(image)}
                   title="Delete image"
                 >
                   Delete

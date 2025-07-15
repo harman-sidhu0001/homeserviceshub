@@ -1,5 +1,6 @@
 import Review from "../models/Review.js";
 import User from "../models/User.js";
+import { updateReviewRatings } from "../utils/ratingCalculator.js";
 
 // Get all reviews for a provider
 export const getReviews = async (req, res) => {
@@ -31,6 +32,8 @@ export const createReview = async (req, res) => {
     if (!reviewBy || !reviewTo || !stars || !reviewTitle) {
       return res.status(400).json({ message: "Missing required fields" });
     }
+
+    // Create the review
     const review = new Review({
       reviewBy,
       reviewTo,
@@ -39,6 +42,32 @@ export const createReview = async (req, res) => {
       reviewDescription,
     });
     await review.save();
+
+    // Update provider ratings
+    const provider = await User.findById(reviewTo);
+    if (provider) {
+      // Get all reviews for this provider
+      const allReviews = await Review.find({ reviewTo });
+
+      // Prepare provider data for rating calculation
+      const providerData = {
+        ...provider.toObject(),
+        reviews: allReviews,
+        avgResponseTime: provider.providerProfile?.avgResponseTime || 0,
+        avgRequestAcceptanceRate:
+          provider.providerProfile?.avgRequestAcceptanceRate || 0,
+      };
+
+      // Calculate updated review ratings only
+      const ratingsUpdated = updateReviewRatings(providerData);
+
+      // Update provider with new review ratings and total reviews count
+      await User.findByIdAndUpdate(reviewTo, {
+        "providerProfile.avgReviewRating": ratingsUpdated.avgReviewRating,
+        "providerProfile.overallRating": ratingsUpdated.overallRating,
+        "providerProfile.totalReviews": allReviews.length,
+      });
+    }
 
     res.status(201).json(review);
   } catch (error) {

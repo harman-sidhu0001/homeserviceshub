@@ -6,6 +6,7 @@ const ProviderEditProfileModal = ({
   onClose,
   onSubmit,
   profilePhoto,
+  handleProfilePhoto,
   onPhotoChange,
   requestStatus,
   onRequestChange,
@@ -14,11 +15,10 @@ const ProviderEditProfileModal = ({
 }) => {
   const [changeRequest, setChangeRequest] = React.useState("");
   const [error, setError] = React.useState("");
-  const [selectedPhoto, setSelectedPhoto] = useState(null);
-  const [selectedFile, setSelectedFile] = useState(null); // <-- store file
   const fileInputRef = useRef();
 
-  const handleRequest = () => {
+  const handleRequest = (e) => {
+    e.preventDefault();
     if (!changeRequest.trim()) {
       setError("Please describe the changes you want.");
       return;
@@ -27,42 +27,21 @@ const ProviderEditProfileModal = ({
     onRequestChange(changeRequest);
     setChangeRequest("");
   };
-
   const handlePhotoButtonClick = () => {
     fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedPhoto(URL.createObjectURL(file));
-      setSelectedFile(file); // <-- store file
-      onPhotoChange(e); // keep this for preview in parent if needed
-    }
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (selectedFile) {
-      onSubmit(selectedFile); // pass file, not preview url
-    }
   };
 
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleRequest}
         className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full"
       >
         <div className="text-xl font-bold mb-2">Edit Profile</div>
         <div className="mb-4 flex flex-col items-center">
           <img
-            src={
-              selectedPhoto ||
-              profilePhoto ||
-              "/assets/icons/default-profile-picture.svg"
-            }
+            src={profilePhoto || "/assets/icons/default-profile-picture.svg"}
             alt="Profile"
             className="w-24 h-24 rounded-full object-cover mb-2 object-top"
           />
@@ -75,7 +54,7 @@ const ProviderEditProfileModal = ({
             type="file"
             accept="image/*"
             ref={fileInputRef}
-            onChange={handleFileChange}
+            onChange={handleProfilePhoto}
             style={{ display: "none" }}
           />
         </div>
@@ -93,9 +72,7 @@ const ProviderEditProfileModal = ({
         {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
         <div className="mb-2 text-xs text-gray-500">
           {requestCount < 10
-            ? `You can make ${
-                10 - requestCount
-              } more free requests. After that, each request is charged ₹100.`
+            ? `You can make ${requestCount} more free requests. After that, each request is charged ₹100.`
             : "Each request is now charged ₹100."}
         </div>
         <div className="mb-2 text-xs text-gray-500">

@@ -302,3 +302,229 @@ export const deleteProviderByAdmin = asyncHandler(async (req, res) => {
   }
   res.status(200).json({ success: true, message: "Provider deleted" });
 });
+
+// @desc    Get all verification requests
+export const getAllVerificationRequests = asyncHandler(async (req, res) => {
+  const { status, page = 1, limit = 10 } = req.query;
+
+  const query = {
+    accountType: { $in: ["provider", "both"] },
+    "providerProfile.verification.status": { $exists: true },
+  };
+
+  // If status is specified, filter by that status, otherwise get all verification requests
+  if (status) {
+    query["providerProfile.verification.status"] = status;
+  }
+  // If no status specified, get all verification requests (requested, verified, rejected)
+
+  const skip = (page - 1) * limit;
+
+  const providers = await User.find(query)
+    .select(
+      "providerProfile.companyName providerProfile.verification providerProfile.profilePhoto createdAt providerProfile.phone"
+    )
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(parseInt(limit))
+    .lean();
+
+  const total = await User.countDocuments(query);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      providers,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        totalProviders: total,
+        hasNext: skip + providers.length < total,
+        hasPrev: page > 1,
+      },
+    },
+  });
+});
+
+// @desc    Update provider verification status
+export const updateProviderVerificationStatus = asyncHandler(
+  async (req, res) => {
+    const { providerId } = req.params;
+    const { status, adminNotes } = req.body;
+
+    if (!["pending", "requested", "verified", "rejected"].includes(status)) {
+      return res.status(400).json({
+        message:
+          "Invalid status. Must be 'pending', 'requested', 'verified', or 'rejected'",
+      });
+    }
+
+    const provider = await User.findById(providerId);
+    if (!provider || !["provider", "both"].includes(provider.accountType)) {
+      return res.status(404).json({ message: "Provider not found" });
+    }
+
+    // Initialize verification object if it doesn't exist
+    if (!provider.providerProfile.verification) {
+      provider.providerProfile.verification = {};
+    }
+
+    const currentStatus = provider.providerProfile.verification.status;
+
+    // Validate status transitions
+    if (currentStatus === "verified" && status !== "verified") {
+      return res.status(400).json({
+        message: "Cannot change status of already verified provider",
+      });
+    }
+
+    // Only allow admin to change from 'requested' to 'verified' or 'rejected'
+    if (
+      currentStatus === "requested" &&
+      !["verified", "rejected"].includes(status)
+    ) {
+      return res.status(400).json({
+        message: "Can only approve or reject verification requests",
+      });
+    }
+
+    // Update verification status
+    provider.providerProfile.verification.status = status;
+
+    // Add admin notes if provided
+    if (adminNotes) {
+      provider.providerProfile.verification.adminNotes = adminNotes;
+    }
+
+    // Add timestamp for when status was updated
+    provider.providerProfile.verification.statusUpdatedAt = new Date();
+
+    await provider.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Provider verification status updated to ${status}`,
+      data: {
+        providerId: provider._id,
+        companyName: provider.providerProfile.companyName,
+        verificationStatus: provider.providerProfile.verification.status,
+        adminNotes: provider.providerProfile.verification.adminNotes,
+        statusUpdatedAt: provider.providerProfile.verification.statusUpdatedAt,
+      },
+    });
+  }
+);
+
+// @desc    Get verification statistics
+export const getVerificationStats = asyncHandler(async (req, res) => {
+  const stats = await User.aggregate([
+    {
+      $match: {
+        accountType: { $in: ["provider", "both"] },
+        "providerProfile.verification.status": { $exists: true },
+      },
+    },
+    {
+      $group: {
+        _id: "$providerProfile.verification.status",
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  // Convert to object format
+  const verificationStats = {
+    pending: 0,
+    requested: 0,
+    verified: 0,
+    rejected: 0,
+    total: 0,
+  };
+
+  stats.forEach((stat) => {
+    verificationStats[stat._id] = stat.count;
+    verificationStats.total += stat.count;
+  });
+
+  res.status(200).json({
+    success: true,
+    data: verificationStats,
+  });
+});
+
+// @desc    Verify provider with document uploads (aadhaar front/back, pan card, gst, admin notes)
+export const verifyProviderWithDocs = asyncHandler(async (req, res) => {
+  const { providerId } = req.params;
+  const { gstNumber, adminNotes } = req.body;
+  const files = req.files || {};
+
+  // Validate required files
+  if (!files.aadhaarFront || !files.aadhaarBack || !files.panCard) {
+    return res.status(400).json({
+      message:
+        "Aadhaar front, Aadhaar back, and PAN card documents are required.",
+    });
+  }
+
+  const provider = await User.findById(providerId);
+  if (!provider || !["provider", "both"].includes(provider.accountType)) {
+    return res.status(404).json({ message: "Provider not found" });
+  }
+
+  // Initialize verification object if it doesn't exist
+  if (!provider.providerProfile.verification) {
+    provider.providerProfile.verification = {};
+  }
+  if (!provider.providerProfile.verification.idProof) {
+    provider.providerProfile.verification.idProof = {};
+  }
+
+  // Save document info
+  provider.providerProfile.verification.idProof.aadhaarFront = {
+    documentName: files.aadhaarFront[0].originalname,
+    documentUrl:
+      files.aadhaarFront[0].location ||
+      files.aadhaarFront[0].url ||
+      files.aadhaarFront[0].path,
+  };
+  provider.providerProfile.verification.idProof.aadhaarBack = {
+    documentName: files.aadhaarBack[0].originalname,
+    documentUrl:
+      files.aadhaarBack[0].location ||
+      files.aadhaarBack[0].url ||
+      files.aadhaarBack[0].path,
+  };
+  provider.providerProfile.verification.idProof.panCard = {
+    documentName: files.panCard[0].originalname,
+    documentUrl:
+      files.panCard[0].location ||
+      files.panCard[0].url ||
+      files.panCard[0].path,
+  };
+
+  // Save GST number if provided
+  if (gstNumber) {
+    provider.providerProfile.verification.idProof.gstNumber = gstNumber;
+  }
+
+  // Save admin notes
+  if (adminNotes) {
+    provider.providerProfile.verification.adminNotes = adminNotes;
+  }
+
+  // Set verification status and timestamp
+  provider.providerProfile.verification.status = "verified";
+  provider.providerProfile.verification.statusUpdatedAt = new Date();
+
+  await provider.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Provider verified and documents uploaded successfully.",
+    provider: {
+      _id: provider._id,
+      companyName: provider.providerProfile.companyName,
+      verification: provider.providerProfile.verification,
+    },
+  });
+});

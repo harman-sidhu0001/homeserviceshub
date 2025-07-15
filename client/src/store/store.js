@@ -5,6 +5,7 @@ import adminUsersReducer from "./adminUsersSlice";
 import adminProvidersReducer from "./adminProvidersSlice";
 import adminRequestsReducer from "./adminRequestsSlice";
 import adminStatsReducer from "./adminStatsSlice";
+import adminVerificationReducer from "./adminVerificationSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,5 +15,6 @@ export const store = configureStore({
     adminProviders: adminProvidersReducer,
     adminRequests: adminRequestsReducer,
     adminStats: adminStatsReducer,
+    adminVerification: adminVerificationReducer,
   },
 });

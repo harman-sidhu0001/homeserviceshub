@@ -140,6 +140,7 @@ const ProviderProfileView = () => {
           onBookmark={handleBookmark}
           isBookmarked={isBookmarked}
           bookmarkLoading={bookmarkLoading}
+          verificationStatus={vm.provider?.data?.verification?.status}
           // No edit or plans for public view
         />
         <ProfileTabs selected={vm.selectedTab} onSelect={vm.setSelectedTab} />

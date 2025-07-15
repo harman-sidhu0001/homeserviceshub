@@ -15,6 +15,8 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { BsStarFill, BsStar, BsStarHalf } from "react-icons/bs";
 import { LuCircleCheckBig } from "react-icons/lu";
 import { createDataFetcher, createUploadHandler } from "../utils/apiHandler";
+import { deleteGalleryImage } from "../services/providerAPI";
+import { apiCall } from "../utils/apiHandler";
 
 export const useProviderProfile = (id) => {
   const dispatch = useDispatch();
@@ -130,7 +132,7 @@ export const useProviderProfileViewModel = () => {
       updateServiceRequestStatus,
       setLoading,
       setError,
-      () => fetchServiceRequests(id) // Refresh service requests
+      () => fetchProviderProfile() // Refresh provider profile to get updated stats
     )(requestId, { status, responseMessage });
 
     return result;
@@ -305,6 +307,19 @@ export const useLoggedProviderProfileViewModel = () => {
     "galleryImage" // Pass correct field name for gallery upload
   );
 
+  // Add handler for deleting gallery images
+  const handleGalleryDelete = async (imageUrl) => {
+    setUploadLoading(true);
+    try {
+      await apiCall(deleteGalleryImage, imageUrl);
+      await fetchProviderProfile();
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
   // Handle service request status update
   const handleUpdateRequestStatus = async (
     requestId,
@@ -315,7 +330,7 @@ export const useLoggedProviderProfileViewModel = () => {
       updateServiceRequestStatus,
       setLoading,
       setError,
-      () => fetchServiceRequests(id) // Refresh service requests
+      () => fetchProviderProfile() // Refresh provider profile to get updated stats
     )(requestId, { status, responseMessage });
 
     return result;
@@ -412,6 +427,7 @@ export const useLoggedProviderProfileViewModel = () => {
     handleUpdateRequestStatus,
     handleProfilePhotoUpload,
     handleGalleryUpload,
+    handleGalleryDelete,
     fetchProviderProfile, // Expose for refresh after upload
     updateProviderProfile: updateProviderProfileHandler, // Expose for verification
   };

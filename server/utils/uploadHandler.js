@@ -1,5 +1,7 @@
 import asyncHandler from "./asyncHandler.js";
 import User from "../models/User.js";
+import { s3Client } from "../config/s3Config.js";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 // Generic single file upload handler
 export const handleSingleFileUpload = (
@@ -175,4 +177,13 @@ export const handleGalleryUpload = (multerInstance, updateField) => {
       }
     });
   });
+};
+
+export const deleteS3Object = async (fileUrl) => {
+  // Parse bucket and key from fileUrl
+  const url = new URL(fileUrl);
+  const Bucket = process.env.AWS_S3_BUCKET_NAME || "homeserviceshubbucket";
+  const Key = decodeURIComponent(url.pathname.substring(1));
+  const command = new DeleteObjectCommand({ Bucket, Key });
+  await s3Client.send(command);
 };
