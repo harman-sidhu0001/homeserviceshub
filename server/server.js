@@ -30,7 +30,8 @@ const app = express();
 // Middlewares
 app.use(
   cors({
-    origin: "http://localhost:5173", // frontend origin
+    origin: "https://homeserviceshub-eta.vercel.app/", // frontend origin
+    // origin: "http://localhost:5173", // for local development
     credentials: true, // allow cookies
   })
 );
