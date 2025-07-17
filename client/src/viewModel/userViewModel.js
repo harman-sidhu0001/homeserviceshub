@@ -134,7 +134,6 @@ export const useUserProfile = () => {
       if (result.success) {
         await fetchUserProfileAndReviews(); // Refresh all data
         // Show success message (you can implement a toast notification here)
-        console.log("Request cancelled successfully");
       }
       return result;
     } catch (error) {

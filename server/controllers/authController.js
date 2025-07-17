@@ -310,9 +310,6 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   user.resetTokenExpiry = tokenExpiry;
   await user.save();
 
-  // Simulate send
-  // console.log(`[OTP/Reset] Token: ${token}`);
-
   res.status(200).json({ success: true, message: "Reset token generated" });
 });
 
@@ -361,9 +358,6 @@ export const sendOTP = asyncHandler(async (req, res) => {
 
   const otp = generateOTP();
   await storeOTP(userId, otp);
-
-  // Simulate SMS send
-  // console.log(`[OTP] ${otp} sent to ${phone}`);
 
   res.status(200).json({ success: true, message: "OTP sent" });
 });

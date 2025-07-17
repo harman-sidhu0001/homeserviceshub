@@ -15,7 +15,6 @@ const searchSchema = z.object({
 
 const HomeHero = () => {
   const { user, role } = useSelector((state) => state.auth);
-  console.log(user, role);
   const navigate = useNavigate();
   const {
     register,

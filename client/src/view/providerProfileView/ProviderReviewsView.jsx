@@ -29,11 +29,9 @@ const ReviewCard = ({ review }) => (
 const ProviderReviewsView = () => {
   const { id: providerId } = useParams();
   const getall = useParams();
-  console.log(getall, "getall");
   const [reviews, setReviews] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  console.log(providerId, "providerId");
   useEffect(() => {
     const fetchReviewsAndServices = async () => {
       try {
@@ -42,7 +40,6 @@ const ProviderReviewsView = () => {
           axiosClient.get(`/providers/${providerId}`),
         ]);
         setReviews(reviewsRes.data || []);
-        console.log(reviewsRes.data, "reviewsRes.data");
         setServices(providerRes.data?.providerProfile?.services || []);
       } catch (err) {
         setReviews([]);

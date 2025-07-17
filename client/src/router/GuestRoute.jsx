@@ -3,7 +3,6 @@ import { Navigate } from "react-router-dom";
 
 const GuestRoute = ({ children }) => {
   const { user, role } = useSelector((state) => state.auth);
-  console.log(user, role);
   return (user && role === "user") || role === "both" ? (
     <Navigate to="/" replace />
   ) : (

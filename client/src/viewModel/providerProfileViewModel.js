@@ -29,7 +29,6 @@ export const useProviderProfile = (id) => {
   );
   const [loading, setLoading] = useState(!isSameProvider);
   const [error, setError] = useState(null);
-  console.log(provider);
   useEffect(() => {
     if (!id || isSameProvider) {
       setProvider(selectedProvider);

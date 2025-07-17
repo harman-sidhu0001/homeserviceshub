@@ -92,7 +92,6 @@ export const getUserReviews = async (req, res) => {
         select: "providerProfile.companyName providerProfile.profilePhoto",
       });
     res.status(200).json(reviews);
-    console.log(reviews);
   } catch (error) {
     res
       .status(500)

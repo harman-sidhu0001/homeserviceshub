@@ -21,7 +21,6 @@ const ProviderCard = ({ provider, onServiceClick }) => {
   } = provider.providerProfile;
 
   const isVerified = verification?.status === "verified";
-  console.log(profilePhoto, "profilePhoto in ProviderCard");
   const dispatch = useDispatch();
   const navigate = useNavigate();
 

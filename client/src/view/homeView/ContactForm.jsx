@@ -22,7 +22,6 @@ const ContactForm = () => {
   });
 
   const onSubmit = (data) => {
-    console.log("Contact:", data); // Replace with actual API call
     reset();
   };
 

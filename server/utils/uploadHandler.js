@@ -12,12 +12,6 @@ export const handleSingleFileUpload = (
 ) => {
   return asyncHandler(async (req, res) => {
     multerInstance.single(fieldName)(req, res, async (err) => {
-      console.log("Upload attempt - User ID:", req.user._id);
-      console.log("Upload attempt - File:", req.file);
-      console.log("Upload attempt - Error:", err);
-      console.log("Upload attempt - Request body:", req.body);
-      console.log("Upload attempt - Request headers:", req.headers);
-
       if (err) {
         console.error("Multer error:", err);
         return res.status(400).json({
