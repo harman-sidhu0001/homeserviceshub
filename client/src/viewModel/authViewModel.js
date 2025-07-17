@@ -119,7 +119,12 @@ export const useAuthForm = (mode = "login", userType = "user") => {
 
     if (res?.data?.user) {
       dispatch(login({ user: res.data.user }));
-      navigate(userType === "provider" ? "/provider-dashboard" : "/");
+      if (userType === "provider" && mode === "register") {
+        navigate("/loggedproviderprofile");
+        window.location.reload();
+      } else {
+        navigate(userType === "provider" ? "/loggedproviderprofile" : "/");
+      }
     }
 
     reset();
