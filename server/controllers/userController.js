@@ -462,3 +462,18 @@ export const notifyUserOnBooking = asyncHandler(async (req, res) => {
   });
   res.json({ success: true, message: "Notification sent" });
 });
+
+// Get top 3 providers in Amritsar by overall rating
+export const getTopProvidersInAmritsar = asyncHandler(async (req, res) => {
+  const providers = await User.find({
+    accountType: { $in: ["provider", "both"] },
+    "providerProfile.location": { $regex: /amritsar/i },
+    isActive: true,
+  })
+    .sort({ "providerProfile.overallRating": -1 })
+    .limit(3)
+    .select(
+      "providerProfile.companyName providerProfile.overallRating providerProfile.profilePhoto providerProfile.location _id"
+    );
+  res.status(200).json({ success: true, data: providers });
+});

@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import Card from "../../components/common/Card";
+import CustomButton from "../../components/common/Button";
+import { useNavigate } from "react-router-dom";
 
 const services = [
   {
@@ -24,32 +26,44 @@ const services = [
   },
 ];
 
-const ServiceServices = () => (
-  <section className="py-16 bg-background">
-    <div className="container mx-auto px-4">
-      <h2 className="text-3xl font-bold text-center mb-8">Our Services</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {services.map((service, index) => (
-          <motion.div
-            key={service.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <Card
-              title={service.title}
-              description={service.description}
-              image={service.image}
-              action={{
-                children: "Explore",
-                href: `/service?q=${service.title.toLowerCase()}&city=amritsar&sortBy=reviews`,
-              }}
-            />
-          </motion.div>
-        ))}
+const ServiceServices = () => {
+  const navigate = useNavigate();
+  return (
+    <section className="py-16 bg-background">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-8">Our Services</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {services.map((service, index) => (
+            <motion.div
+              key={service.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card
+                title={service.title}
+                description={service.description}
+                image={service.image}
+                action={{
+                  children: "Explore",
+                  href: `/service?q=${service.title.toLowerCase()}&city=amritsar&sortBy=reviews`,
+                }}
+              />
+            </motion.div>
+          ))}
+        </div>
+        <div className="flex justify-center mt-10">
+          <CustomButton
+            text={"View All Services"}
+            width="auto"
+            onClick={() => {
+              navigate("/services");
+            }}
+          />
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 export default ServiceServices;

@@ -144,6 +144,16 @@ const AdminDashboard = () => {
                     text="Manage Verifications"
                     onClick={() => navigate("/admin/dashboard/verifications")}
                   />
+                  <CustomButton
+                    text="Manage Trending Services"
+                    onClick={() =>
+                      navigate("/admin/dashboard/trending-services")
+                    }
+                  />
+                  <CustomButton
+                    text="Manage Services"
+                    onClick={() => navigate("/admin/dashboard/services")}
+                  />
                 </div>
               </div>
             </div>

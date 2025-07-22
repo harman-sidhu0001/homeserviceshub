@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { getProviders } from "../model/providers";
 import { handleAsync } from "../utils/handleAsync";
+import { getTopProvidersInAmritsar } from "../model/providers";
 
 export const useServiceProviders = () => {
   const { serviceName } = useParams();
@@ -86,4 +87,28 @@ export const useServiceProviders = () => {
     setSortByValue,
     updateSearch,
   };
+};
+
+export const useTopProvidersInAmritsar = () => {
+  const [providers, setProviders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProviders = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getTopProvidersInAmritsar();
+        setProviders(data);
+      } catch (err) {
+        setError(err.message || "Failed to load top providers");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProviders();
+  }, []);
+
+  return { providers, loading, error };
 };

@@ -4,7 +4,7 @@ import { MdVerifiedUser, MdHeadsetMic, MdTouchApp } from "react-icons/md";
 const usps = [
   {
     title: "Vetted Providers",
-    description: "All providers are verified for quality.",
+    description: "All providers with verified tick are verified.",
     icon: MdVerifiedUser,
   },
   {

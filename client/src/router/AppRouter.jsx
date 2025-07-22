@@ -21,6 +21,8 @@ import LoggedProviderProfilePage from "../pages/LoggedProviderProfilePage";
 import ReviewPage from "../pages/ReviewPage";
 import ProviderReviewsView from "../view/providerProfileView/ProviderReviewsView";
 import RequestServicePage from "../pages/RequestServicePage";
+import AdminTrendingServicesCrud from "../pages/AdminTrendingServicesCrud";
+import AdminServicesCrud from "../pages/AdminServicesCrud";
 
 const AppRouter = () => (
   <Routes>
@@ -99,6 +101,11 @@ const AppRouter = () => (
         </AdminRouterCheck>
       }
     />
+    <Route
+      path="/admin/dashboard/trending-services"
+      element={<AdminTrendingServicesCrud />}
+    />
+    <Route path="/admin/dashboard/services" element={<AdminServicesCrud />} />
 
     {/* ✅ Protected routes */}
     <Route element={<ProtectedRoute />}>
