@@ -1,13 +1,7 @@
 // File: src/layouts/HomeFooter.jsx
 
 import React from "react";
-import {
-  FaFacebookF,
-  FaTwitter,
-  FaInstagram,
-  FaPhoneAlt,
-  FaEnvelope,
-} from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaYoutube } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 const HomeFooter = () => {
@@ -21,13 +15,22 @@ const HomeFooter = () => {
             Connecting you with trusted professionals across cities.
           </p>
           <div className="flex space-x-4 mt-2">
-            <a href="#" className="hover:text-gray-300 transition">
+            <a
+              href="https://www.facebook.com/people/Home-Services-Hub/61578393999115"
+              className="hover:text-gray-300 transition"
+            >
               <FaFacebookF />
             </a>
-            <a href="#" className="hover:text-gray-300 transition">
-              <FaTwitter />
+            <a
+              href="https://www.youtube.com/channel/UCIYcXxFXiRYekGovgC_ACVw"
+              className="hover:text-gray-300 transition"
+            >
+              <FaYoutube />
             </a>
-            <a href="#" className="hover:text-gray-300 transition">
+            <a
+              href="https://www.instagram.com/homeserviceshub.in"
+              className="hover:text-gray-300 transition"
+            >
               <FaInstagram />
             </a>
           </div>
@@ -90,8 +93,8 @@ const HomeFooter = () => {
               </Link>
             </li>
             <li>
-              <Link to="/provider/help" className="hover:text-white transition">
-                Help & Support
+              <Link to="/contact" className="hover:text-white transition">
+                Contact Us
               </Link>
             </li>
           </ul>

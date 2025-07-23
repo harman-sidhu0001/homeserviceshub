@@ -11,10 +11,10 @@ const ProviderCard = ({ provider, onServiceClick }) => {
   const {
     companyName,
     location,
-    rating = 0,
-    projectsCompleted = 0,
+    overallRating,
+    projectsDone,
     profilePhoto,
-    about = "We are a dedicated team of professionals providing top-notch services to meet your needs.",
+    intro,
     verification,
     services = [],
     availability = [],
@@ -79,11 +79,12 @@ const ProviderCard = ({ provider, onServiceClick }) => {
 
             <div className="flex items-center text-sm text-gray-600 mt-2 gap-4">
               <span className="flex items-center" title="Rating">
-                <FaStar className="text-yellow-400 mr-1" /> {rating?.toFixed(1)}
+                <FaStar className="text-yellow-400 mr-1" />{" "}
+                {overallRating?.toFixed(1)}
               </span>
               <span className="flex items-center" title="Experience">
-                <FaBriefcase className="text-blue-500 mr-1" />{" "}
-                {projectsCompleted} Projects
+                <FaBriefcase className="text-blue-500 mr-1" /> {projectsDone}{" "}
+                Projects
               </span>
             </div>
           </div>
@@ -91,22 +92,17 @@ const ProviderCard = ({ provider, onServiceClick }) => {
 
         {/* Bottom: About and Services */}
         <div className="flex flex-col gap-2 mt-2">
-          <div className="flex gap-2">
-            <p className="text-gray-700 text-sm line-clamp-2">{about}</p>
-            <Link
-              to={`/provider/${provider._id}`}
-              className="text-primary text-sm font-semibold cursor-pointer hover:underline w-fit"
-            >
-              read more
-            </Link>
-            {/* <button
-              onClick={handleReadMore}
-              className="text-primary text-sm font-semibold cursor-pointer hover:underline w-fit"
-            >
-              read more
-            </button> */}
+          <div>
+            <p className="text-gray-700 text-sm line-clamp-2">
+              {intro}{" "}
+              <Link
+                to={`/provider/${provider._id}`}
+                className="text-primary text-sm font-semibold cursor-pointer hover:underline w-fit"
+              >
+                read more
+              </Link>
+            </p>
           </div>
-
           {services.length > 0 && (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600 mt-2">
               <strong className="self-center">Services:</strong>

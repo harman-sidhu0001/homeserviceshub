@@ -23,6 +23,8 @@ import ProviderReviewsView from "../view/providerProfileView/ProviderReviewsView
 import RequestServicePage from "../pages/RequestServicePage";
 import AdminTrendingServicesCrud from "../pages/AdminTrendingServicesCrud";
 import AdminServicesCrud from "../pages/AdminServicesCrud";
+import ContactUsPage from "../pages/ContactUsPage";
+import AboutUsPage from "../pages/AboutUsPage";
 
 const AppRouter = () => (
   <Routes>
@@ -36,7 +38,8 @@ const AppRouter = () => (
       element={<LoggedProviderProfilePage />}
     />
     <Route path="/how-it-works" element={<div>How It Works Page</div>} />
-    <Route path="/contact" element={<div>Contact Page</div>} />
+    <Route path="/contact" element={<ContactUsPage />} />
+    <Route path="/about" element={<AboutUsPage />} />
 
     {/* ✅ Guest-only routes - User Auth */}
     <Route
