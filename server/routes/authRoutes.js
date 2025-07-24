@@ -11,6 +11,8 @@ import {
   authStatus,
   logout,
   refreshAccessToken,
+  sendRegistrationOtp,
+  verifyRegistrationOtp,
 } from "../controllers/authController.js";
 import { rateLimitPerUser } from "../middleware/rateLimiter.js";
 import { authenticate } from "../middleware/authMiddleware.js";
@@ -37,6 +39,18 @@ router.post(
   "/confirm-otp",
   rateLimitPerUser("otp-confirm", 5, 300), // 5 retries / 5 min
   confirmOTP
+);
+
+// Registration OTP routes
+router.post(
+  "/send-registration-otp",
+  rateLimitPerUser("reg-otp-req", 3, 600), // 3 requests / 10 min
+  sendRegistrationOtp
+);
+router.post(
+  "/verify-registration-otp",
+  rateLimitPerUser("reg-otp-confirm", 5, 600), // 5 retries / 10 min
+  verifyRegistrationOtp
 );
 
 export default router;

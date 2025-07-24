@@ -11,8 +11,12 @@ import {
   handleSingleFileUpload,
   handleMultipleFilesUpload,
 } from "../utils/uploadHandler.js";
-import { sendGmailNotification } from "../services/emailNotificationService.js";
+import { sendEmail } from "../services/emailService.js";
 import { updateReviewRatings } from "../utils/ratingCalculator.js";
+import {
+  sendAdminNewServiceRequestEmail,
+  sendCustomerServiceRequestStatusEmail,
+} from "../services/emailService.js";
 
 // @desc    Get logged-in user profile
 export const getUserProfile = asyncHandler(async (req, res) => {
@@ -356,6 +360,33 @@ export const requestService = asyncHandler(async (req, res) => {
     status: "pending",
   });
 
+  // Send email to admin
+  await sendAdminNewServiceRequestEmail({
+    serviceName,
+    description,
+    preferredDate,
+    location,
+    budget,
+    propertyType,
+    timeline,
+    customerDetails: serviceRequest.customerDetails,
+    provider,
+  });
+
+  // Send email to customer (requested)
+  await sendCustomerServiceRequestStatusEmail({
+    status: "requested",
+    customerEmail: serviceRequest.customerDetails.email,
+    serviceName,
+    providerName: provider.providerProfile?.companyName,
+    description,
+    preferredDate,
+    location,
+    budget,
+    propertyType,
+    timeline,
+  });
+
   res.status(201).json({ success: true, request: serviceRequest });
 });
 
@@ -380,6 +411,20 @@ export const cancelServiceRequest = asyncHandler(async (req, res) => {
 
   request.status = "cancelled";
   await request.save();
+
+  // Send email to customer (cancelled)
+  await sendCustomerServiceRequestStatusEmail({
+    status: "cancelled",
+    customerEmail: request.customerDetails.email,
+    serviceName: request.serviceName,
+    providerName: undefined, // Not needed for cancelled
+    description: request.description,
+    preferredDate: request.preferredDate,
+    location: request.location,
+    budget: request.budget,
+    propertyType: request.propertyType,
+    timeline: request.timeline,
+  });
 
   res
     .status(200)
@@ -454,11 +499,11 @@ export const rateService = asyncHandler(async (req, res) => {
 // Example: Notify user on booking (add this in the relevant booking controller)
 export const notifyUserOnBooking = asyncHandler(async (req, res) => {
   const { userEmail, serviceName } = req.body;
-  await sendGmailNotification({
+  await sendEmail({
     to: userEmail,
     subject: `Booking Confirmed for ${serviceName}`,
-    text: `Your booking for ${serviceName} is confirmed!`,
     html: `<p>Your booking for <b>${serviceName}</b> is confirmed!</p>`,
+    text: `Your booking for ${serviceName} is confirmed!`,
   });
   res.json({ success: true, message: "Notification sent" });
 });

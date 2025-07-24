@@ -12,6 +12,8 @@ import {
   loginProvider,
   registerProvider,
   checkAuthStatus,
+  sendRegistrationOtp,
+  verifyRegistrationOtp,
 } from "../model/auth";
 import {
   loginSchema,
@@ -31,6 +33,12 @@ export const useAuthForm = (mode = "login", userType = "user") => {
   const [error, setError] = useState("");
   const [selectedServices, setSelectedServices] = useState([]);
   const [serviceOptions, setServiceOptions] = useState([]);
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState("");
+
   const getServicesdata = async () => {
     const { success, data } = await handleAsync(getServices);
     if (success) {
@@ -85,6 +93,51 @@ export const useAuthForm = (mode = "login", userType = "user") => {
     name: "customFields",
   });
 
+  // Handler to send OTP
+  const handleSendOtp = async () => {
+    setOtpLoading(true);
+    setOtpError("");
+    try {
+      const email = watch("email");
+      if (!email) {
+        setOtpError("Please enter your email first.");
+        setOtpLoading(false);
+        return;
+      }
+      await sendRegistrationOtp(email);
+      setOtpSent(true);
+    } catch (err) {
+      setOtpError(
+        err?.response?.data?.message || err?.message || "Failed to send OTP."
+      );
+    }
+    setOtpLoading(false);
+  };
+
+  // Handler to verify OTP
+  const handleVerifyOtp = async () => {
+    setOtpLoading(true);
+    setOtpError("");
+    try {
+      const email = watch("email");
+      if (!email || !otp) {
+        setOtpError("Please enter your email and OTP.");
+        setOtpLoading(false);
+        return;
+      }
+      await verifyRegistrationOtp(email, otp);
+      setOtpVerified(true);
+    } catch (err) {
+      setOtpError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "OTP verification failed."
+      );
+      setOtpVerified(false);
+    }
+    setOtpLoading(false);
+  };
+
   const submitLogic = async (data) => {
     if (
       userType === "provider" &&
@@ -92,6 +145,10 @@ export const useAuthForm = (mode = "login", userType = "user") => {
       selectedServices.length === 0
     ) {
       throw new Error("Please select at least one service");
+    }
+    // OTP required for both user and provider registration
+    if (mode === "register" && !otpVerified) {
+      throw new Error("Please verify your email with OTP before registering.");
     }
 
     const payload = {
@@ -102,6 +159,7 @@ export const useAuthForm = (mode = "login", userType = "user") => {
         userType === "provider" && mode === "register"
           ? selectedServices
           : undefined,
+      otp: mode === "register" ? otp : undefined,
     };
 
     let res;
@@ -163,6 +221,15 @@ export const useAuthForm = (mode = "login", userType = "user") => {
     customFields,
     appendCustomField,
     removeCustomField,
+    // OTP logic
+    otp,
+    setOtp,
+    otpSent,
+    otpVerified,
+    otpLoading,
+    otpError,
+    handleSendOtp,
+    handleVerifyOtp,
   };
 };
 

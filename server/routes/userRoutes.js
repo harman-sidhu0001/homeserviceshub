@@ -20,6 +20,10 @@ import {
 
 const router = express.Router();
 
+// Location-based services
+router.get("/nearby-providers", listNearbyProviders);
+router.get("/top-providers-amritsar", getTopProvidersInAmritsar);
+
 // Protected routes (require authentication)
 router.use(authenticate);
 
@@ -42,10 +46,6 @@ router.get("/bookmarks", getUserBookmarks);
 router.post("/request-service", requestService);
 router.put("/cancel-request/:requestId", cancelServiceRequest);
 router.post("/rate-service/:requestId", rateService);
-
-// Location-based services
-router.get("/nearby-providers", listNearbyProviders);
-router.get("/top-providers-amritsar", getTopProvidersInAmritsar);
 
 // Booking notification
 router.post("/notify-booking", notifyUserOnBooking);

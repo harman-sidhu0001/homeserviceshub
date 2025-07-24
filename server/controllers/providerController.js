@@ -14,6 +14,7 @@ import {
 import Review from "../models/Review.js";
 import { updateServiceRequestRatings } from "../utils/ratingCalculator.js";
 import ChangeRequest from "../models/ChangeRequest.js";
+import { sendCustomerServiceRequestStatusEmail } from "../services/emailService.js";
 
 export const getServiceProviders = asyncHandler(async (req, res) => {
   let { service, city = "amritsar", sortBy = "reviews" } = req.query;
@@ -330,6 +331,27 @@ export const updateServiceRequestStatus = asyncHandler(async (req, res) => {
   request.responseTime = new Date();
   if (responseMessage) request.responseMessage = responseMessage;
   await request.save();
+
+  // Notify customer by email
+  let notifyStatus = undefined;
+  if (status === "accepted") notifyStatus = "requested"; // or "accepted" if you want a separate template
+  if (status === "rejected") notifyStatus = "rejected";
+  if (status === "completed") notifyStatus = "completed";
+  if (notifyStatus) {
+    const provider = await User.findById(request.providerId);
+    await sendCustomerServiceRequestStatusEmail({
+      status: notifyStatus,
+      customerEmail: request.customerDetails.email,
+      serviceName: request.serviceName,
+      providerName: provider?.providerProfile?.companyName,
+      description: request.description,
+      preferredDate: request.preferredDate,
+      location: request.location,
+      budget: request.budget,
+      propertyType: request.propertyType,
+      timeline: request.timeline,
+    });
+  }
 
   // Update provider stats based on status
   if (status === "accepted") {

@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { IoClose } from "react-icons/io5";
-import { useFieldArray } from "react-hook-form";
 import FormInput from "../../components/common/FormInput";
 import CustomButton from "../../components/common/Button";
 import AvailabilitySelector from "../../components/common/AvailabilitySelector";
@@ -23,11 +22,15 @@ const ProviderRegisterForm = () => {
     serviceOptions,
     selectedServices,
     toggleService,
-    control,
-    customFields,
-    appendCustomField,
-    removeCustomField,
     watch,
+    otp,
+    setOtp,
+    otpSent,
+    otpVerified,
+    otpLoading,
+    otpError,
+    handleSendOtp,
+    handleVerifyOtp,
   } = useAuthForm("register", "provider");
 
   // Remove the old availability days array since we're using the new component
@@ -78,6 +81,42 @@ const ProviderRegisterForm = () => {
               {...register("email")}
               error={errors.email?.message}
             />
+            {/* OTP Section */}
+            <div className="flex gap-2 items-center">
+              {!otpVerified && (
+                <CustomButton
+                  type="button"
+                  text={otpSent ? "Resend OTP" : "Send OTP"}
+                  onClick={handleSendOtp}
+                  disabled={otpLoading}
+                  width="auto"
+                />
+              )}
+              {otpSent && !otpVerified && (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Enter OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="border rounded px-2 py-1 w-32"
+                  />
+                  <CustomButton
+                    type="button"
+                    text="Verify OTP"
+                    onClick={handleVerifyOtp}
+                    disabled={otpLoading || !otp}
+                    width="auto"
+                  />
+                </>
+              )}
+              {otpVerified && (
+                <span className="text-green-600 font-semibold ml-2">
+                  Email Verified
+                </span>
+              )}
+            </div>
+            {otpError && <div className="text-red-500 text-sm">{otpError}</div>}
 
             <FormInput
               type="tel"
@@ -261,7 +300,7 @@ const ProviderRegisterForm = () => {
               type="submit"
               text={loading ? "Registering..." : "Register"}
               height="auto"
-              disabled={loading}
+              disabled={loading || !otpVerified}
             />
 
             <p className="text-sm text-accent mt-2">
@@ -285,7 +324,7 @@ const ProviderRegisterForm = () => {
 
         <div className="hidden md:block w-1/2 relative">
           <LazyLoadImage
-            src="/assets/images/provider2.jpg"
+            src="/assets/images/defaultBG.jpg"
             alt="Provider Registration Visual"
             className="w-full h-full object-cover rounded-r-2xl"
           />

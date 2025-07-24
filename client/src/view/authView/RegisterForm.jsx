@@ -9,7 +9,22 @@ import CustomButton from "../../components/common/Button";
 
 const RegisterForm = () => {
   const navigate = useNavigate();
-  const { register, handleSubmit, errors, onSubmit } = useAuthForm("register");
+  const {
+    register,
+    handleSubmit,
+    errors,
+    onSubmit,
+    otp,
+    setOtp,
+    otpSent,
+    otpVerified,
+    otpLoading,
+    otpError,
+    handleSendOtp,
+    handleVerifyOtp,
+    loading,
+    error,
+  } = useAuthForm("register");
 
   return (
     <motion.section
@@ -42,6 +57,42 @@ const RegisterForm = () => {
               {...register("email")}
               error={errors.email?.message}
             />
+            {/* OTP Section */}
+            <div className="flex gap-2 items-center">
+              {!otpVerified && (
+                <CustomButton
+                  type="button"
+                  text={otpSent ? "Resend OTP" : "Send OTP"}
+                  onClick={handleSendOtp}
+                  disabled={otpLoading}
+                  width="auto"
+                />
+              )}
+              {otpSent && !otpVerified && (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Enter OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="border rounded px-2 py-1 w-32"
+                  />
+                  <CustomButton
+                    type="button"
+                    text="Verify OTP"
+                    onClick={handleVerifyOtp}
+                    disabled={otpLoading || !otp}
+                    width="auto"
+                  />
+                </>
+              )}
+              {otpVerified && (
+                <span className="text-green-600 font-semibold ml-2">
+                  Email Verified
+                </span>
+              )}
+            </div>
+            {otpError && <div className="text-red-500 text-sm">{otpError}</div>}
             <FormInput
               type="password"
               placeholder="Password"
@@ -66,8 +117,13 @@ const RegisterForm = () => {
               {...register("location")}
               error={errors.location?.message}
             />
-
-            <CustomButton type="submit" text="Sign Up" height="auto" />
+            {error && <div className="text-red-500 text-sm">{error}</div>}
+            <CustomButton
+              type="submit"
+              text={loading ? "Signing Up..." : "Sign Up"}
+              height="auto"
+              disabled={!otpVerified || loading}
+            />
             <p className="text-sm text-accent mt-2">
               Already have an account?{" "}
               <Link to="/login" className="text-primary hover:underline">

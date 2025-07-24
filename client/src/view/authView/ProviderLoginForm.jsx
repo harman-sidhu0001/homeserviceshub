@@ -78,7 +78,7 @@ const ProviderLoginForm = () => {
         </div>
         <div className="hidden md:block w-1/2 relative">
           <LazyLoadImage
-            src="/assets/images/provider1.jpg"
+            src="/assets/images/defaultBG.jpg"
             alt="Provider Login Visual"
             className="w-full h-full object-cover rounded-r-2xl"
           />

@@ -7,13 +7,14 @@ import {
   storeRefreshToken,
   verifyRefreshToken,
 } from "../services/tokenService.js";
-import { generateOTP, storeOTP } from "../services/otpServices.js";
-import { verifyOTP } from "../services/otpServices.js";
+import { generateOTP, storeOTP, verifyOTP } from "../services/otpServices.js";
 import { generateSecureToken } from "../utils/tokenUtils.js";
 import redis from "../config/redisClient.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import setAuthCookie from "../services/cookieService.js";
 import { REFRESH_TOKEN_SECRET } from "../config/jwt.js";
+import { sendAdminNewRegistrationEmail } from "../services/emailService.js";
+import { sendUserRegistrationOtpEmail } from "../services/emailService.js";
 
 // Helper to auto-generate provider intro
 function generateProviderIntro({
@@ -49,10 +50,60 @@ function generateProviderIntro({
   }
 }
 
+// @route   POST /api/auth/send-registration-otp
+// @desc    Send OTP to user email for registration
+// @access  Public
+export const sendRegistrationOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+    // Generate OTP and store in Redis for 10 minutes
+    const otp = generateOTP();
+    await storeOTP(email, otp, 600); // 600 seconds = 10 minutes
+    await sendUserRegistrationOtpEmail({ to: email, otp });
+    return res.status(200).json({ message: "OTP sent to email" });
+  } catch (err) {
+    return res.status(500).json({ message: "Failed to send OTP" });
+  }
+};
+
+// @route   POST /api/auth/verify-registration-otp
+// @desc    Verify OTP for user registration
+// @access  Public
+export const verifyRegistrationOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
+    await verifyOTP(email, otp);
+    return res.status(200).json({ message: "OTP verified" });
+  } catch (err) {
+    return res
+      .status(400)
+      .json({ message: err.message || "OTP verification failed" });
+  }
+};
+
 // User Signup (Personal User)
 export const registerUser = async (req, res) => {
   try {
-    const { fullName, email, password, phone, location } = req.body;
+    const { fullName, email, password, phone, location, otp } = req.body;
+    // Check OTP first
+    if (!otp) {
+      return res
+        .status(400)
+        .json({ message: "OTP is required for registration" });
+    }
+    try {
+      await verifyOTP(email, otp);
+    } catch (err) {
+      return res
+        .status(400)
+        .json({ message: err.message || "OTP verification failed" });
+    }
 
     const emailLower = email.toLowerCase();
     const locationLower = location.toLowerCase();
@@ -109,8 +160,19 @@ export const registerUser = async (req, res) => {
     await storeRefreshToken(savedUser._id.toString(), refreshToken);
     setAuthCookie(res, token, refreshToken);
 
-    return res.status(201).json({ token, message: "Registration successful" });
-  } catch (error) {
+    // Send admin notification for new user registration
+    await sendAdminNewRegistrationEmail({
+      type: "user",
+      name: fullName,
+      email: email.toLowerCase(),
+      phone,
+      location,
+    });
+
+    return res
+      .status(201)
+      .json({ token, message: "User registration successful" });
+  } catch (err) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -229,6 +291,17 @@ export const registerProvider = asyncHandler(async (req, res) => {
   const refreshToken = generateRefreshToken(user._id);
   await storeRefreshToken(user._id.toString(), refreshToken);
   setAuthCookie(res, token, refreshToken);
+
+  // Send admin notification for new provider registration
+  await sendAdminNewRegistrationEmail({
+    type: "provider",
+    companyName,
+    companyEmail: providerEmail,
+    phone,
+    location: locationLower,
+    services,
+    serviceAreas,
+  });
 
   return res.status(201).json({
     token,
