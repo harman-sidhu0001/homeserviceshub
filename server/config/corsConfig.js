@@ -3,19 +3,25 @@ import { currentConfig } from "./environment.js";
 // CORS configuration for different environments
 const corsOptions = {
   development: {
-    origin: "http://localhost:5173",
+    origin: currentConfig.corsOrigins,
     credentials: true,
     optionsSuccessStatus: 200,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   },
   production: {
     origin: currentConfig.corsOrigins,
     credentials: true,
     optionsSuccessStatus: 200,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   },
   test: {
     origin: currentConfig.corsOrigins,
     credentials: true,
     optionsSuccessStatus: 200,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   },
 };
 

@@ -1,23 +1,36 @@
+// Helper function to clean CORS origins
+const cleanCorsOrigins = (originsString) => {
+  if (!originsString) return [];
+  return originsString
+    .split(",")
+    .map((origin) => origin.trim().replace(/['"]/g, ""))
+    .filter((origin) => origin.length > 0);
+};
+
 // Environment configuration for the backend
 export const config = {
   development: {
     port: process.env.PORT || 5000,
     corsOrigins: process.env.CORS_ORIGINS
-      ? process.env.CORS_ORIGINS.split(",")
+      ? cleanCorsOrigins(process.env.CORS_ORIGINS)
       : ["http://localhost:5173", "http://localhost:3000"],
     enableScheduler: process.env.ENABLE_SCHEDULER === "true",
   },
   production: {
     port: process.env.PORT || 5000,
     corsOrigins: process.env.CORS_ORIGINS
-      ? process.env.CORS_ORIGINS.split(",")
-      : ["http://localhost:5173"],
+      ? cleanCorsOrigins(process.env.CORS_ORIGINS)
+      : [
+          "https://www.homeserviceshub.in",
+          "https://homeserviceshub.in",
+          "https://homeserviceshub-eta.vercel.app",
+        ],
     enableScheduler: process.env.ENABLE_SCHEDULER === "true",
   },
   test: {
     port: process.env.PORT || 5001,
     corsOrigins: process.env.CORS_ORIGINS
-      ? process.env.CORS_ORIGINS.split(",")
+      ? cleanCorsOrigins(process.env.CORS_ORIGINS)
       : ["http://localhost:5173", "http://localhost:3000"],
     enableScheduler: process.env.ENABLE_SCHEDULER === "true",
   },
