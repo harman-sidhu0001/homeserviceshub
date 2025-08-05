@@ -7,14 +7,14 @@ import {
   storeRefreshToken,
   verifyRefreshToken,
 } from "../services/tokenService.js";
-import { generateOTP, storeOTP, verifyOTP } from "../services/otpServices.js";
+import { generateOTP, storeOTP } from "../services/otpServices.js";
+import { verifyOTP } from "../services/otpServices.js";
 import { generateSecureToken } from "../utils/tokenUtils.js";
 import redis from "../config/redisClient.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import setAuthCookie from "../services/cookieService.js";
 import { REFRESH_TOKEN_SECRET } from "../config/jwt.js";
 import { sendAdminNewRegistrationEmail } from "../services/emailService.js";
-import { sendUserRegistrationOtpEmail } from "../services/emailService.js";
 
 // Helper to auto-generate provider intro
 function generateProviderIntro({
@@ -50,60 +50,10 @@ function generateProviderIntro({
   }
 }
 
-// @route   POST /api/auth/send-registration-otp
-// @desc    Send OTP to user email for registration
-// @access  Public
-export const sendRegistrationOtp = async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
-    // Generate OTP and store in Redis for 10 minutes
-    const otp = generateOTP();
-    await storeOTP(email, otp, 600); // 600 seconds = 10 minutes
-    await sendUserRegistrationOtpEmail({ to: email, otp });
-    return res.status(200).json({ message: "OTP sent to email" });
-  } catch (err) {
-    return res.status(500).json({ message: "Failed to send OTP" });
-  }
-};
-
-// @route   POST /api/auth/verify-registration-otp
-// @desc    Verify OTP for user registration
-// @access  Public
-export const verifyRegistrationOtp = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-    if (!email || !otp) {
-      return res.status(400).json({ message: "Email and OTP are required" });
-    }
-    await verifyOTP(email, otp);
-    return res.status(200).json({ message: "OTP verified" });
-  } catch (err) {
-    return res
-      .status(400)
-      .json({ message: err.message || "OTP verification failed" });
-  }
-};
-
 // User Signup (Personal User)
 export const registerUser = async (req, res) => {
   try {
-    const { fullName, email, password, phone, location, otp } = req.body;
-    // Check OTP first
-    if (!otp) {
-      return res
-        .status(400)
-        .json({ message: "OTP is required for registration" });
-    }
-    try {
-      await verifyOTP(email, otp);
-    } catch (err) {
-      return res
-        .status(400)
-        .json({ message: err.message || "OTP verification failed" });
-    }
+    const { fullName, email, password, phone, location } = req.body;
 
     const emailLower = email.toLowerCase();
     const locationLower = location.toLowerCase();
@@ -463,4 +413,91 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
   setAuthCookie(res, accessToken, refreshToken); // Refresh only access token
 
   return res.status(200).json({ message: "Access token refreshed", user });
+});
+
+// @desc    Send registration OTP
+export const sendRegistrationOtp = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  const emailLower = email.toLowerCase();
+
+  // Check if user already exists
+  const existingUser = await User.findOne({
+    $or: [
+      { "userProfile.email": emailLower },
+      { "providerProfile.email": emailLower },
+    ],
+  });
+
+  if (existingUser) {
+    return res.status(400).json({ message: "Email already registered" });
+  }
+
+  // Generate a temporary user ID for OTP storage
+  const tempUserId = `temp_${Date.now()}_${Math.random()
+    .toString(36)
+    .substr(2, 9)}`;
+  const otpReqKey = `reg-otp-req:${emailLower}`;
+
+  // Rate limit check
+  const reqCount = await redis.incr(otpReqKey);
+  if (reqCount === 1) {
+    await redis.expire(otpReqKey, 600); // 10-min window
+  }
+
+  if (reqCount > 3) {
+    return res.status(429).json({
+      message: "Too many OTP requests. Try again later.",
+    });
+  }
+
+  const otp = generateOTP();
+
+  // Store OTP with email as key for registration
+  const otpKey = `reg-otp:${emailLower}`;
+  await redis.setex(otpKey, 600, otp); // 10 minutes expiry
+
+  // TODO: Send email with OTP (implement email service)
+  console.log(`Registration OTP for ${email}: ${otp}`);
+
+  res.status(200).json({
+    success: true,
+    message: "Registration OTP sent successfully",
+    tempUserId,
+  });
+});
+
+// @desc    Verify registration OTP
+export const verifyRegistrationOtp = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res.status(400).json({ message: "Email and OTP are required" });
+  }
+
+  const emailLower = email.toLowerCase();
+  const otpKey = `reg-otp:${emailLower}`;
+
+  // Get stored OTP
+  const storedOtp = await redis.get(otpKey);
+
+  if (!storedOtp) {
+    return res.status(400).json({ message: "OTP expired or not found" });
+  }
+
+  if (storedOtp !== otp) {
+    return res.status(400).json({ message: "Invalid OTP" });
+  }
+
+  // OTP is valid - delete it from Redis
+  await redis.del(otpKey);
+
+  res.status(200).json({
+    success: true,
+    message: "Registration OTP verified successfully",
+  });
 });
