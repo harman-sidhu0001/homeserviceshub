@@ -29,6 +29,5 @@ export const getConfig = () => {
   const env = getCurrentEnv();
   return config[env] || config.development;
 };
-console.log(getCurrentEnv());
 // Export current config
 export const currentConfig = getConfig();
