@@ -6,6 +6,8 @@ import connectDB from "./config/db.js";
 import redis from "./config/redisClient.js";
 import errorHandler from "./middleware/errorHandler.js";
 import cookieParser from "cookie-parser";
+import { getCorsOptions } from "./config/corsConfig.js";
+import { currentConfig } from "./config/environment.js";
 
 // Import routes
 import authRoutes from "./routes/authRoutes.js";
@@ -16,6 +18,7 @@ import serviceRoute from "./routes/servicesRoutes.js";
 import bookmarkRoutes from "./routes/bookmarkRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import schedulerRoutes from "./routes/schedulerRoutes.js";
+import healthRoutes from "./routes/healthRoutes.js";
 
 // Import scheduler service
 import schedulerService from "./services/schedulerService.js";
@@ -32,13 +35,7 @@ connectDB();
 const app = express();
 
 // Middlewares
-app.use(
-  cors({
-    origin: "https://homeserviceshub-eta.vercel.app", // frontend origin
-    // origin: "http://localhost:5173", // for local development
-    credentials: true, // allow cookies
-  })
-);
+app.use(cors(getCorsOptions()));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -64,6 +61,7 @@ app.use("/api/services", serviceRoute);
 app.use("/api/bookmarks", bookmarkRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/scheduler", schedulerRoutes);
+app.use("/health", healthRoutes);
 
 // 404 Route
 app.use((req, res) => {
@@ -74,12 +72,14 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // Server Start
-const PORT = process.env.PORT || 5000;
+const PORT = currentConfig.port;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`🔗 CORS Origins Count: ${currentConfig.corsOrigins.length}`);
 
   // Start the scheduler when server starts
-  if (process.env.ENABLE_SCHEDULER === "true") {
+  if (currentConfig.enableScheduler) {
     schedulerService.start();
   }
 });
