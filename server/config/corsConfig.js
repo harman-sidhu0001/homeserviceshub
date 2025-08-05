@@ -3,7 +3,7 @@ import { currentConfig } from "./environment.js";
 // CORS configuration for different environments
 const corsOptions = {
   development: {
-    origin: currentConfig.corsOrigins,
+    origin: "http://localhost:5173",
     credentials: true,
     optionsSuccessStatus: 200,
   },
