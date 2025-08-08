@@ -7,15 +7,18 @@ export const config = {
   },
   production: {
     apiBaseURL:
-      import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
+      import.meta.env.VITE_API_BASE_URL_PROD ||
+      "https://homeserviceshub-production.up.railway.app/api",
     appName: import.meta.env.VITE_APP_NAME || "HomeServicesHub",
-    appURL: import.meta.env.VITE_APP_URL || "http://localhost:5173",
+    appURL:
+      import.meta.env.VITE_APP_URL ||
+      "https://homeserviceshub.in" ||
+      "https://www.homeserviceshub.in",
   },
   test: {
-    apiBaseURL:
-      import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
-    appName: import.meta.env.VITE_APP_NAME || "HomeServicesHub",
-    appURL: import.meta.env.VITE_APP_URL || "http://localhost:5173",
+    apiBaseURL: "http://localhost:5000/api",
+    appName: "HomeServicesHub",
+    appURL: "http://localhost:5173",
   },
 };
 
@@ -29,5 +32,6 @@ export const getConfig = () => {
   const env = getCurrentEnv();
   return config[env] || config.development;
 };
+
 // Export current config
 export const currentConfig = getConfig();
