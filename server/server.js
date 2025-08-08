@@ -17,11 +17,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import serviceRoute from "./routes/servicesRoutes.js";
 import bookmarkRoutes from "./routes/bookmarkRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
-import schedulerRoutes from "./routes/schedulerRoutes.js";
 import healthRoutes from "./routes/healthRoutes.js";
-
-// Import scheduler service
-import schedulerService from "./services/schedulerService.js";
 
 // Optional global rate limiter
 import { rateLimitPerIP } from "./middleware/rateLimiter.js";
@@ -67,7 +63,6 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/services", serviceRoute);
 app.use("/api/bookmarks", bookmarkRoutes);
 app.use("/api/reviews", reviewRoutes);
-app.use("/api/scheduler", schedulerRoutes);
 app.use("/health", healthRoutes);
 
 // 404 Route
@@ -84,9 +79,4 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`🔗 CORS Origins Count: ${currentConfig.corsOrigins.length}`);
-
-  // Start the scheduler when server starts
-  if (currentConfig.enableScheduler) {
-    schedulerService.start();
-  }
 });

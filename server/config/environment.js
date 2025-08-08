@@ -14,7 +14,6 @@ export const config = {
     corsOrigins: process.env.CORS_ORIGINS
       ? cleanCorsOrigins(process.env.CORS_ORIGINS)
       : ["http://localhost:5173", "http://localhost:3000"],
-    enableScheduler: process.env.ENABLE_SCHEDULER === "true",
   },
   production: {
     port: process.env.PORT || 5000,
@@ -25,14 +24,12 @@ export const config = {
           "https://homeserviceshub.in",
           "https://homeserviceshub-eta.vercel.app",
         ],
-    enableScheduler: process.env.ENABLE_SCHEDULER === "true",
   },
   test: {
     port: process.env.PORT || 5001,
     corsOrigins: process.env.CORS_ORIGINS
       ? cleanCorsOrigins(process.env.CORS_ORIGINS)
       : ["http://localhost:5173", "http://localhost:3000"],
-    enableScheduler: process.env.ENABLE_SCHEDULER === "true",
   },
 };
 

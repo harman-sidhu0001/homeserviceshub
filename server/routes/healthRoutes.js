@@ -16,7 +16,6 @@ router.get("/", async (req, res) => {
       services: {
         database: "unknown",
         redis: "unknown",
-        scheduler: "unknown",
       },
     };
 
@@ -36,17 +35,8 @@ router.get("/", async (req, res) => {
       health.services.redis = "disconnected";
     }
 
-    // Check scheduler status
-    try {
-      const schedulerService = await import("../services/schedulerService.js");
-      const status = schedulerService.default.getStatus();
-      health.services.scheduler = status.isRunning ? "running" : "stopped";
-    } catch (error) {
-      health.services.scheduler = "error";
-    }
-
     const allServicesHealthy = Object.values(health.services).every(
-      (service) => service === "connected" || service === "running"
+      (service) => service === "connected"
     );
 
     const statusCode = allServicesHealthy ? 200 : 503;
@@ -69,8 +59,17 @@ router.get("/env", (req, res) => {
     config: {
       port: currentConfig.port,
       corsOriginsCount: currentConfig.corsOrigins.length,
-      enableScheduler: currentConfig.enableScheduler,
     },
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// CORS test endpoint
+router.get("/cors-test", (req, res) => {
+  res.json({
+    message: "CORS is working!",
+    origin: req.headers.origin,
+    allowedOrigins: currentConfig.corsOrigins,
     timestamp: new Date().toISOString(),
   });
 });
