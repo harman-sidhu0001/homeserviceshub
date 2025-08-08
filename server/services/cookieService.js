@@ -1,7 +1,7 @@
 const setAuthCookie = (res, token, refreshToken) => {
   // Get the origin from the request to determine the domain
   const origin = res.req.headers.origin;
-  const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = false;
 
   // Determine if we're dealing with cross-domain requests
   const isCrossDomain = origin && origin !== res.req.headers.host;
