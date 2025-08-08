@@ -78,7 +78,7 @@ router.post("/test-cookie", (req, res) => {
   const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isCrossDomain ? "None" : "Lax",
+    sameSite: "none",
     maxAge: 1000 * 60 * 5, // 5 minutes
   };
 
@@ -92,6 +92,28 @@ router.post("/test-cookie", (req, res) => {
     origin,
     isProduction,
     isCrossDomain,
+  });
+});
+
+// Simple test endpoint that requires authentication
+router.get("/test-auth", (req, res) => {
+  console.log("Test auth endpoint - Cookies:", req.cookies);
+  console.log("Test auth endpoint - Headers:", req.headers);
+
+  if (!req.cookies?.token) {
+    return res.status(401).json({
+      message: "No token found",
+      cookies: req.cookies,
+      headers: {
+        origin: req.headers.origin,
+        host: req.headers.host,
+      },
+    });
+  }
+
+  res.json({
+    message: "Authentication successful",
+    cookies: req.cookies,
   });
 });
 

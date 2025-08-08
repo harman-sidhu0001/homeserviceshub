@@ -28,12 +28,22 @@ const corsOptions = {
         return callback(null, true);
       }
 
+      // Log the origin for debugging
+      console.log("CORS blocked origin:", origin);
+      console.log("Allowed origins:", allowedOrigins);
+
       callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
     optionsSuccessStatus: 200,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Cookie",
+    ],
+    exposedHeaders: ["Set-Cookie"],
   },
   test: {
     origin: currentConfig.corsOrigins,

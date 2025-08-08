@@ -1,7 +1,7 @@
 const setAuthCookie = (res, token, refreshToken) => {
   // Get the origin from the request to determine the domain
   const origin = res.req.headers.origin;
-  const isProduction = false;
+  const isProduction = process.env.NODE_ENV === "production";
 
   // Determine if we're dealing with cross-domain requests
   const isCrossDomain = origin && origin !== res.req.headers.host;
@@ -18,6 +18,14 @@ const setAuthCookie = (res, token, refreshToken) => {
   // Setting domain to .railway.app causes "invalid domain" error
   // The browser will automatically send cookies to the correct domain
 
+  console.log("Setting cookies with options:", {
+    origin,
+    isProduction,
+    isCrossDomain,
+    cookieOptions,
+    host: res.req.headers.host,
+  });
+
   res.cookie("token", token, cookieOptions);
 
   // Refresh token cookie (longer expiry)
@@ -29,6 +37,8 @@ const setAuthCookie = (res, token, refreshToken) => {
   };
 
   res.cookie("refreshToken", refreshToken, refreshCookieOptions);
+
+  console.log("Cookies set successfully");
 };
 
 export default setAuthCookie;
