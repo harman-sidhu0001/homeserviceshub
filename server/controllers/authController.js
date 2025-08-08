@@ -263,38 +263,33 @@ export const registerProvider = asyncHandler(async (req, res) => {
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
+  console.log("User login attempt:", {
+    email,
+    passwordLength: password?.length,
+  });
+
   const user = await User.findOne({ "userProfile.email": email });
+  console.log("User found:", {
+    found: !!user,
+    accountType: user?.accountType,
+    hasUserProfile: !!user?.userProfile,
+    hasPasswordHash: !!user?.userProfile?.passwordHash,
+  });
+
   if (!user || user.accountType === "provider") {
+    console.log("User login failed - Invalid user or account type");
     return res.status(401).json({ message: "Invalid credentials" });
   }
 
   const match = await bcrypt.compare(password, user.userProfile.passwordHash);
-  if (!match) return res.status(401).json({ message: "Invalid credentials" });
+  console.log("Password match:", match);
 
-  const token = generateAccessToken(user._id);
-  const refreshToken = generateRefreshToken(user._id);
-  await storeRefreshToken(user._id.toString(), refreshToken);
-  setAuthCookie(res, token, refreshToken);
-  const userObj = user.toObject();
-  delete userObj.userProfile.passwordHash;
-  res.status(200).json({ message: "Login Successfull", user: userObj });
-};
-
-// Login with Company Phone (Provider)
-export const loginProvider = async (req, res) => {
-  const { phone, password } = req.body;
-
-  const user = await User.findOne({ "providerProfile.phone": phone });
-  if (!user || user.accountType === "user") {
+  if (!match) {
+    console.log("User login failed - Password mismatch");
     return res.status(401).json({ message: "Invalid credentials" });
   }
 
-  const match = await bcrypt.compare(
-    password,
-    user.providerProfile.providerPass
-  );
-  if (!match) return res.status(401).json({ message: "Invalid credentials" });
-
+  console.log("User login successful, setting cookies...");
   const token = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
   await storeRefreshToken(user._id.toString(), refreshToken);
@@ -302,6 +297,52 @@ export const loginProvider = async (req, res) => {
 
   const userObj = user.toObject();
   delete userObj.passwordHash;
+  console.log("User login completed successfully");
+  res.status(200).json({ message: "Login Successfull", user: userObj });
+};
+
+// Login with Company Phone (Provider)
+export const loginProvider = async (req, res) => {
+  const { phone, password } = req.body;
+
+  console.log("Provider login attempt:", {
+    phone,
+    passwordLength: password?.length,
+  });
+
+  const user = await User.findOne({ "providerProfile.phone": phone });
+  console.log("User found:", {
+    found: !!user,
+    accountType: user?.accountType,
+    hasProviderProfile: !!user?.providerProfile,
+    hasProviderPass: !!user?.providerProfile?.providerPass,
+  });
+
+  if (!user || user.accountType === "user") {
+    console.log("Provider login failed - Invalid user or account type");
+    return res.status(401).json({ message: "Invalid credentials" });
+  }
+
+  const match = await bcrypt.compare(
+    password,
+    user.providerProfile.providerPass
+  );
+  console.log("Password match:", match);
+
+  if (!match) {
+    console.log("Provider login failed - Password mismatch");
+    return res.status(401).json({ message: "Invalid credentials" });
+  }
+
+  console.log("Provider login successful, setting cookies...");
+  const token = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
+  await storeRefreshToken(user._id.toString(), refreshToken);
+  setAuthCookie(res, token, refreshToken);
+
+  const userObj = user.toObject();
+  delete userObj.passwordHash;
+  console.log("Provider login completed successfully");
   res.status(200).json({ message: "Login Successful", user: userObj });
 };
 

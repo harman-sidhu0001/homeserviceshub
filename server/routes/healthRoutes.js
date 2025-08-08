@@ -117,6 +117,75 @@ router.get("/test-auth", (req, res) => {
   });
 });
 
+// Provider vs User authentication test
+router.get("/test-auth-comparison", (req, res) => {
+  console.log("Auth comparison test - Cookies:", req.cookies);
+  console.log("Auth comparison test - Headers:", req.headers);
+
+  const token = req.cookies?.token;
+  const refreshToken = req.cookies?.refreshToken;
+
+  res.json({
+    message: "Auth comparison test",
+    hasToken: !!token,
+    hasRefreshToken: !!refreshToken,
+    tokenLength: token ? token.length : 0,
+    refreshTokenLength: refreshToken ? refreshToken.length : 0,
+    cookies: req.cookies,
+    headers: {
+      origin: req.headers.origin,
+      host: req.headers.host,
+      referer: req.headers.referer,
+    },
+  });
+});
+
+// Test endpoint to simulate login behavior
+router.post("/test-login-simulation", (req, res) => {
+  const { userType, credentials } = req.body;
+  const origin = req.headers.origin;
+  const isProduction = process.env.NODE_ENV === "production";
+
+  console.log("Login simulation:", {
+    userType,
+    credentials,
+    origin,
+    isProduction,
+  });
+
+  // Simulate setting cookies like the real login endpoints
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: "none",
+    maxAge: 1000 * 60 * 15, // 15 minutes
+  };
+
+  const refreshCookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: "none",
+    maxAge: 1000 * 60 * 60 * 24 * 90, // 90 days
+  };
+
+  // Set test cookies
+  res.cookie("token", `test-token-${userType}-${Date.now()}`, cookieOptions);
+  res.cookie(
+    "refreshToken",
+    `test-refresh-${userType}-${Date.now()}`,
+    refreshCookieOptions
+  );
+
+  res.json({
+    message: `${userType} login simulation completed`,
+    userType,
+    cookieOptions,
+    refreshCookieOptions,
+    origin,
+    isProduction,
+  });
+});
+
 // Environment info endpoint (sanitized)
 router.get("/env", (req, res) => {
   res.json({
