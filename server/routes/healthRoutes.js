@@ -52,6 +52,55 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Cookie debug endpoint
+router.get("/debug-cookies", (req, res) => {
+  res.json({
+    cookies: req.cookies,
+    headers: {
+      origin: req.headers.origin,
+      host: req.headers.host,
+      referer: req.headers.referer,
+      "user-agent": req.headers["user-agent"],
+    },
+    environment: process.env.NODE_ENV || "development",
+    corsOrigins: currentConfig.corsOrigins,
+    railwayDomain: process.env.RAILWAY_DOMAIN,
+    renderDomain: process.env.RENDER_DOMAIN,
+  });
+});
+
+// Test cookie setting endpoint
+router.post("/test-cookie", (req, res) => {
+  const origin = req.headers.origin;
+  const isProduction = process.env.NODE_ENV === "production";
+  const isCrossDomain = origin && origin !== req.headers.host;
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isCrossDomain ? "None" : "Lax",
+    maxAge: 1000 * 60 * 5, // 5 minutes
+  };
+
+  if (isProduction && isCrossDomain) {
+    const railwayDomain =
+      process.env.RAILWAY_DOMAIN || process.env.RENDER_DOMAIN;
+    if (railwayDomain) {
+      cookieOptions.domain = railwayDomain;
+    }
+  }
+
+  res.cookie("testCookie", "testValue", cookieOptions);
+
+  res.json({
+    message: "Test cookie set",
+    cookieOptions,
+    origin,
+    isProduction,
+    isCrossDomain,
+  });
+});
+
 // Environment info endpoint (sanitized)
 router.get("/env", (req, res) => {
   res.json({

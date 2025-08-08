@@ -10,7 +10,26 @@ const corsOptions = {
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   },
   production: {
-    origin: currentConfig.corsOrigins,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      const allowedOrigins = currentConfig.corsOrigins;
+
+      // Check if origin is in allowed list
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
+      }
+
+      // For Railway/Render deployment, also allow the service domain
+      const railwayDomain =
+        process.env.RAILWAY_DOMAIN || process.env.RENDER_DOMAIN;
+      if (railwayDomain && origin.includes(railwayDomain)) {
+        return callback(null, true);
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
     optionsSuccessStatus: 200,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

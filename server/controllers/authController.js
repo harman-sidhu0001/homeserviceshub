@@ -309,8 +309,28 @@ export const loginProvider = async (req, res) => {
 export const logout = asyncHandler(async (req, res) => {
   const userId = req.user?.id;
   if (userId) await deleteRefreshToken(userId); // Redis
-  res.clearCookie("token");
-  res.clearCookie("refreshToken");
+
+  // Clear cookies with proper options for cross-domain
+  const origin = req.headers.origin;
+  const isProduction = process.env.NODE_ENV === "production";
+  const isCrossDomain = origin && origin !== req.headers.host;
+
+  const clearOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isCrossDomain ? "None" : "Lax",
+  };
+
+  if (isProduction && isCrossDomain) {
+    const railwayDomain =
+      process.env.RAILWAY_DOMAIN || process.env.RENDER_DOMAIN;
+    if (railwayDomain) {
+      clearOptions.domain = railwayDomain;
+    }
+  }
+
+  res.clearCookie("token", clearOptions);
+  res.clearCookie("refreshToken", clearOptions);
   res.status(200).json({ message: "Logged out" });
 });
 
