@@ -10,7 +10,7 @@ const setAuthCookie = (res, token, refreshToken) => {
   const cookieOptions = {
     httpOnly: true,
     secure: isProduction, // Only secure in production
-    sameSite: isCrossDomain ? "None" : "Lax", // Use None for cross-domain, Lax for same domain
+    sameSite: "none", // Use None for cross-domain, Lax for same domain
     maxAge: 1000 * 60 * 15, // 15 minutes
   };
 
@@ -30,7 +30,7 @@ const setAuthCookie = (res, token, refreshToken) => {
   const refreshCookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isCrossDomain ? "None" : "Lax",
+    sameSite: "none",
     maxAge: 1000 * 60 * 60 * 24 * 90, // 90 days
   };
 
