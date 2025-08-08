@@ -14,15 +14,9 @@ const setAuthCookie = (res, token, refreshToken) => {
     maxAge: 1000 * 60 * 15, // 15 minutes
   };
 
-  // For cross-domain requests in production, we need to set the domain
-  if (isProduction && isCrossDomain) {
-    // Extract domain from Railway URL or use a wildcard
-    const railwayDomain =
-      process.env.RAILWAY_DOMAIN || process.env.RENDER_DOMAIN;
-    if (railwayDomain) {
-      cookieOptions.domain = railwayDomain;
-    }
-  }
+  // For Railway/Render, we don't set domain - let the browser handle it
+  // Setting domain to .railway.app causes "invalid domain" error
+  // The browser will automatically send cookies to the correct domain
 
   res.cookie("token", token, cookieOptions);
 
@@ -33,14 +27,6 @@ const setAuthCookie = (res, token, refreshToken) => {
     sameSite: "none",
     maxAge: 1000 * 60 * 60 * 24 * 90, // 90 days
   };
-
-  if (isProduction && isCrossDomain) {
-    const railwayDomain =
-      process.env.RAILWAY_DOMAIN || process.env.RENDER_DOMAIN;
-    if (railwayDomain) {
-      refreshCookieOptions.domain = railwayDomain;
-    }
-  }
 
   res.cookie("refreshToken", refreshToken, refreshCookieOptions);
 };

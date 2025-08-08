@@ -318,16 +318,10 @@ export const logout = asyncHandler(async (req, res) => {
   const clearOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isCrossDomain ? "None" : "Lax",
+    sameSite: "none", // Use none for cross-domain
   };
 
-  if (isProduction && isCrossDomain) {
-    const railwayDomain =
-      process.env.RAILWAY_DOMAIN || process.env.RENDER_DOMAIN;
-    if (railwayDomain) {
-      clearOptions.domain = railwayDomain;
-    }
-  }
+  // Don't set domain for Railway - let browser handle it
 
   res.clearCookie("token", clearOptions);
   res.clearCookie("refreshToken", clearOptions);

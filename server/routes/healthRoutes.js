@@ -82,13 +82,7 @@ router.post("/test-cookie", (req, res) => {
     maxAge: 1000 * 60 * 5, // 5 minutes
   };
 
-  if (isProduction && isCrossDomain) {
-    const railwayDomain =
-      process.env.RAILWAY_DOMAIN || process.env.RENDER_DOMAIN;
-    if (railwayDomain) {
-      cookieOptions.domain = railwayDomain;
-    }
-  }
+  // Don't set domain for Railway - let browser handle it
 
   res.cookie("testCookie", "testValue", cookieOptions);
 
