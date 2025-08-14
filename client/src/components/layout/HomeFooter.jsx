@@ -99,6 +99,26 @@ const HomeFooter = () => {
             </li>
           </ul>
         </div>
+
+        {/* Legal Links */}
+        <div>
+          <h4 className="text-lg font-semibold mb-4">Legal</h4>
+          <ul className="space-y-2 text-sm text-gray-200">
+            <li>
+              <Link
+                to="/privacy-policy"
+                className="hover:text-white transition"
+              >
+                Privacy Policy
+              </Link>
+            </li>
+            <li>
+              <Link to="/terms-of-use" className="hover:text-white transition">
+                Terms of Use
+              </Link>
+            </li>
+          </ul>
+        </div>
       </div>
 
       {/* Bottom Disclaimer */}
