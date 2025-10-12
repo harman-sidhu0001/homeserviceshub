@@ -1,58 +1,75 @@
-import React from 'react';
-import SeoHelmet from '../seo/SeoHelmet.jsx';
+import React from "react";
+import SEO from "../components/SEO";
 
 const PrivacyPolicyPage = () => {
   return (
     <>
-      <SeoHelmet 
-        title="Privacy Policy - Home Services Hub"
-        description="Learn about how Home Services Hub collects, uses, and protects your personal information. Read our comprehensive privacy policy for users in India."
-        keywords="privacy policy, data protection, personal information, Home Services Hub, India"
+      <SEO
+        title="Privacy Policy"
+        description="Learn about how Home Services Hub collects, uses, and protects your personal information. Our comprehensive privacy policy for users and service providers in India."
+        type="legal"
       />
-      
-      <main style={{
-        maxWidth: '800px', 
-        margin: 'auto', 
-        padding: '20px', 
-        fontFamily: 'Arial, sans-serif', 
-        lineHeight: 1.6
-      }}>
+
+      <main
+        style={{
+          maxWidth: "800px",
+          margin: "auto",
+          padding: "20px",
+          fontFamily: "Arial, sans-serif",
+          lineHeight: 1.6,
+        }}
+      >
         <h1>Privacy Policy</h1>
         <p>
-          <strong>Effective Date:</strong> December 2024<br />
+          <strong>Effective Date:</strong> December 2024
+          <br />
           <strong>Last Updated:</strong> December 2024
         </p>
 
         <p>
-          This Privacy Policy ("Policy") explains how Home Services Hub ("Home Services Hub", "we", "us", or "our") 
-          collects, uses, shares, and protects your personal information when you access or use our platform, 
-          including our website, mobile application, or any related services (collectively, the "Platform").
+          This Privacy Policy ("Policy") explains how Home Services Hub ("Home
+          Services Hub", "we", "us", or "our") collects, uses, shares, and
+          protects your personal information when you access or use our
+          platform, including our website, mobile application, or any related
+          services (collectively, the "Platform").
         </p>
 
         <p>
-          By accessing or using our Platform, you agree to the terms of this Privacy Policy and consent to the 
-          handling of your personal information as described herein. If you do not agree with this Policy, 
+          By accessing or using our Platform, you agree to the terms of this
+          Privacy Policy and consent to the handling of your personal
+          information as described herein. If you do not agree with this Policy,
           please do not use the Platform.
         </p>
 
         <h2>1. Scope</h2>
         <p>
-          This Policy applies only to users located in India and currently only to services offered in the state of Punjab. 
-          We reserve the right to update this policy as we expand to other regions.
+          This Policy applies only to users located in India and currently only
+          to services offered in the state of Punjab. We reserve the right to
+          update this policy as we expand to other regions.
         </p>
 
         <h2>2. Definitions</h2>
         <ul>
-          <li><strong>Users:</strong> Individuals using our Platform to find service providers.</li>
-          <li><strong>Ace(s):</strong> Service providers who offer their services on our Platform.</li>
-          <li><strong>Personal Information:</strong> Any information that relates to an identified or identifiable individual.</li>
+          <li>
+            <strong>Users:</strong> Individuals using our Platform to find
+            service providers.
+          </li>
+          <li>
+            <strong>Ace(s):</strong> Service providers who offer their services
+            on our Platform.
+          </li>
+          <li>
+            <strong>Personal Information:</strong> Any information that relates
+            to an identified or identifiable individual.
+          </li>
         </ul>
 
         <h2>3. Information We Collect</h2>
         <p>
-          We collect personal information directly from you and through third parties or automated means, including:
+          We collect personal information directly from you and through third
+          parties or automated means, including:
         </p>
-        
+
         <h3>From Users:</h3>
         <ul>
           <li>Name, address, phone number, and email</li>
@@ -61,7 +78,7 @@ const PrivacyPolicyPage = () => {
           <li>IP address and device information</li>
           <li>Communication and service request details</li>
         </ul>
-        
+
         <h3>From Aces:</h3>
         <ul>
           <li>Business name, identity proof (e.g., Aadhaar, PAN)</li>
@@ -106,13 +123,15 @@ const PrivacyPolicyPage = () => {
 
         <h2>7. Data Security</h2>
         <p>
-          We take reasonable steps to protect your personal data. However, no platform is 100% secure. 
-          Please protect your credentials and report any suspicious activity.
+          We take reasonable steps to protect your personal data. However, no
+          platform is 100% secure. Please protect your credentials and report
+          any suspicious activity.
         </p>
 
         <h2>8. Data Retention</h2>
         <p>
-          We retain your data as long as necessary for our business and legal obligations.
+          We retain your data as long as necessary for our business and legal
+          obligations.
         </p>
 
         <h2>9. Your Rights (Indian Users)</h2>
@@ -123,31 +142,38 @@ const PrivacyPolicyPage = () => {
           <li>Request deletion (subject to legal exceptions)</li>
         </ul>
         <p>
-          To make a request, email us at: <strong>privacy@homeserviceshub.in</strong>
+          To make a request, email us at:{" "}
+          <strong>privacy@homeserviceshub.in</strong>
         </p>
 
         <h2>10. Children's Privacy</h2>
         <p>
-          Our Platform is not for use by individuals under 18. We do not knowingly collect information from minors.
+          Our Platform is not for use by individuals under 18. We do not
+          knowingly collect information from minors.
         </p>
 
         <h2>11. Third-Party Links</h2>
         <p>
-          We are not responsible for privacy practices on external websites. Review their policies before providing personal data.
+          We are not responsible for privacy practices on external websites.
+          Review their policies before providing personal data.
         </p>
 
         <h2>12. Updates to This Policy</h2>
         <p>
-          We may update this policy periodically. Continued use of the Platform after updates means you accept the new terms.
+          We may update this policy periodically. Continued use of the Platform
+          after updates means you accept the new terms.
         </p>
 
         <h2>13. Contact Us</h2>
         <p>
-          If you have any questions or requests regarding your personal information, please contact us at:
+          If you have any questions or requests regarding your personal
+          information, please contact us at:
         </p>
         <p>
-          <strong>Home Services Hub</strong><br />
-          Email: privacy@homeserviceshub.in<br />
+          <strong>Home Services Hub</strong>
+          <br />
+          Email: privacy@homeserviceshub.in
+          <br />
           Address: Punjab, India
         </p>
       </main>

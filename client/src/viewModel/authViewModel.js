@@ -267,7 +267,7 @@ export const useAuthLogout = () => {
     setLoading(true);
 
     const { success, error } = await handleAsync(async () => {
-      const { logoutUser } = await import("../model/auth");
+      // logoutUser is statically imported at top; call it directly
       await logoutUser();
       dispatch(logout());
       navigate("/");

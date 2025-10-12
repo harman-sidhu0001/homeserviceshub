@@ -1,13 +1,13 @@
 import React from "react";
-import SeoHelmet from "../seo/SeoHelmet.jsx";
+import SEO from "../components/SEO";
 
 const TermsOfUsePage = () => {
   return (
     <>
-      <SeoHelmet
-        title="Terms of Use - Home Services Hub"
-        description="Read the terms and conditions for using Home Services Hub platform. Understand your rights and responsibilities when using our services."
-        keywords="terms of use, terms and conditions, user agreement, Home Services Hub, legal"
+      <SEO
+        title="Terms of Use"
+        description="Read the terms and conditions for using Home Services Hub platform. Understand your rights and responsibilities when using our services in Amritsar."
+        type="legal"
       />
 
       <main
