@@ -99,7 +99,7 @@ export const useAuthForm = (mode = "login", userType = "user") => {
     setOtpError("");
     try {
       const email = watch("email");
-      if (!email) {
+      if (!email || email.trim() === "") {
         setOtpError("Please enter your email first.");
         setOtpLoading(false);
         return;
@@ -146,8 +146,9 @@ export const useAuthForm = (mode = "login", userType = "user") => {
     ) {
       throw new Error("Please select at least one service");
     }
-    // OTP required for both user and provider registration
-    if (mode === "register" && !otpVerified) {
+    // OTP required only when email is provided
+    const hasEmail = data.email && data.email.trim() !== "";
+    if (mode === "register" && hasEmail && !otpVerified) {
       throw new Error("Please verify your email with OTP before registering.");
     }
 

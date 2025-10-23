@@ -28,7 +28,7 @@ export const providerLoginSchema = z.object({
 export const providerRegisterSchema = z
   .object({
     companyName: z.string().min(2, "Company name is required"),
-    email: z.string().email("Invalid email").optional().or(z.literal("")),
+    email: z.string().email("Invalid email").or(z.literal("")).optional(),
     phone: z.string().min(10, "Phone number must be at least 10 digits"),
     password: z.string().min(6, "Minimum 6 characters"),
     confirmPassword: z.string().min(6, "Confirm password is required"),
@@ -44,6 +44,7 @@ export const providerRegisterSchema = z
     totalWorkers: z
       .number({ invalid_type_error: "Enter a valid number" })
       .min(1, "Must be at least 1 worker"),
+    location: z.string().min(2, "Location is required"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",

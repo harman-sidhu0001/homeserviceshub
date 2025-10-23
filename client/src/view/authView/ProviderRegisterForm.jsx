@@ -81,41 +81,43 @@ const ProviderRegisterForm = () => {
               {...register("email")}
               error={errors.email?.message}
             />
-            {/* OTP Section */}
-            <div className="flex gap-2 items-center">
-              {!otpVerified && (
-                <CustomButton
-                  type="button"
-                  text={otpSent ? "Resend OTP" : "Send OTP"}
-                  onClick={handleSendOtp}
-                  disabled={otpLoading}
-                  width="auto"
-                />
-              )}
-              {otpSent && !otpVerified && (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Enter OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="border rounded px-2 py-1 w-32"
-                  />
+            {/* OTP Section - Only show when email is provided */}
+            {watch("email") && watch("email").trim() !== "" && (
+              <div className="flex gap-2 items-center">
+                {!otpVerified && (
                   <CustomButton
                     type="button"
-                    text="Verify OTP"
-                    onClick={handleVerifyOtp}
-                    disabled={otpLoading || !otp}
+                    text={otpSent ? "Resend OTP" : "Send OTP"}
+                    onClick={handleSendOtp}
+                    disabled={otpLoading}
                     width="auto"
                   />
-                </>
-              )}
-              {otpVerified && (
-                <span className="text-green-600 font-semibold ml-2">
-                  Email Verified
-                </span>
-              )}
-            </div>
+                )}
+                {otpSent && !otpVerified && (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Enter OTP"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      className="border rounded px-2 py-1 w-32"
+                    />
+                    <CustomButton
+                      type="button"
+                      text="Verify OTP"
+                      onClick={handleVerifyOtp}
+                      disabled={otpLoading || !otp}
+                      width="auto"
+                    />
+                  </>
+                )}
+                {otpVerified && (
+                  <span className="text-green-600 font-semibold ml-2">
+                    Email Verified
+                  </span>
+                )}
+              </div>
+            )}
             {otpError && <div className="text-red-500 text-sm">{otpError}</div>}
 
             <FormInput
@@ -170,6 +172,22 @@ const ProviderRegisterForm = () => {
               placeholder="Year of Establishment"
               {...register("yearEstablished")}
               error={errors.yearEstablished?.message}
+            />
+
+            {/* Location */}
+            <FormInput
+              type="text"
+              placeholder="Location"
+              {...register("location")}
+              error={errors.location?.message}
+            />
+
+            {/* Total Workers */}
+            <FormInput
+              type="number"
+              placeholder="Total Workers"
+              {...register("totalWorkers", { valueAsNumber: true })}
+              error={errors.totalWorkers?.message}
             />
 
             {/* Payment Methods */}
@@ -282,25 +300,13 @@ const ProviderRegisterForm = () => {
               )}
             </div> */}
 
-            <FormInput
-              type="text"
-              placeholder="Company Location"
-              {...register("location")}
-              error={errors.location?.message}
-            />
 
-            <FormInput
-              type="number"
-              placeholder="Total Workers"
-              {...register("totalWorkers", { valueAsNumber: true })}
-              error={errors.totalWorkers?.message}
-            />
 
             <CustomButton
               type="submit"
               text={loading ? "Registering..." : "Register"}
               height="auto"
-              disabled={loading || !otpVerified}
+              disabled={loading}
             />
 
             <p className="text-sm text-accent mt-2">
