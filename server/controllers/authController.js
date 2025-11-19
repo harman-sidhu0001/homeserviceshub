@@ -14,7 +14,10 @@ import redis from "../config/redisClient.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import setAuthCookie from "../services/cookieService.js";
 import { REFRESH_TOKEN_SECRET } from "../config/jwt.js";
-import { sendAdminNewRegistrationEmail } from "../services/emailService.js";
+import {
+  sendAdminNewRegistrationEmail,
+  sendUserRegistrationOtpEmail,
+} from "../services/emailService.js";
 
 // Helper to auto-generate provider intro
 function generateProviderIntro({
@@ -50,7 +53,7 @@ function generateProviderIntro({
   }
 }
 
-// User Signup (Personal User)
+// User Signup (Personal User) - FIXED VERSION
 export const registerUser = async (req, res) => {
   try {
     const { fullName, email, password, phone, location } = req.body;
@@ -110,19 +113,29 @@ export const registerUser = async (req, res) => {
     await storeRefreshToken(savedUser._id.toString(), refreshToken);
     setAuthCookie(res, token, refreshToken);
 
-    // Send admin notification for new user registration
-    await sendAdminNewRegistrationEmail({
-      type: "user",
-      name: fullName,
-      email: email.toLowerCase(),
-      phone,
-      location,
-    });
+    // Send admin notification for new user registration - FIXED WITH TRY-CATCH
+    try {
+      await sendAdminNewRegistrationEmail({
+        type: "user",
+        name: fullName,
+        email: email.toLowerCase(),
+        phone,
+        location,
+      });
+      console.log(`✅ Admin notification sent for new user: ${fullName}`);
+    } catch (emailError) {
+      console.error(
+        `❌ Failed to send admin notification for user ${fullName}:`,
+        emailError
+      );
+      // Continue with registration even if email fails
+    }
 
     return res
       .status(201)
       .json({ token, message: "User registration successful" });
   } catch (err) {
+    console.error("User registration error:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -516,8 +529,9 @@ export const sendRegistrationOtp = asyncHandler(async (req, res) => {
   const otpKey = `reg-otp:${emailLower}`;
   await redis.setex(otpKey, 600, otp); // 10 minutes expiry
 
-  // TODO: Send email with OTP (implement email service)
-  console.log(`Registration OTP for ${email}: ${otp}`);
+  // Send OTP email
+  await sendUserRegistrationOtpEmail({ to: emailLower, otp });
+  console.log(`Registration OTP sent to ${email}`);
 
   res.status(200).json({
     success: true,

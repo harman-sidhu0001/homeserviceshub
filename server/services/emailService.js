@@ -201,13 +201,50 @@ export const sendAdminNewRegistrationEmail = async ({
 };
 
 export const sendUserRegistrationOtpEmail = async ({ to, otp }) => {
-  const subject = "Confirm Your Registration - OTP Verification";
+  const subject = "🔐 Verify Your Email - Home Services Hub";
   const html = `
-    <p>Dear User,</p>
-    <p>Your OTP for confirming your registration is: <b>${otp}</b></p>
-    <p>This OTP is valid for <b>10 minutes</b>. Please enter it in the registration form to complete your sign up.</p>
-    <p>If you did not initiate this request, you can ignore this email.</p>
-    <p>Best regards,<br>Home Services Hub</p>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+      <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #2563eb; margin: 0; font-size: 28px;">🏠 Home Services Hub</h1>
+          <p style="color: #6b7280; margin: 5px 0 0 0;">Your trusted service partner</p>
+        </div>
+        
+        <h2 style="color: #1f2937; margin-bottom: 20px;">Email Verification Required</h2>
+        
+        <p style="color: #374151; font-size: 16px; line-height: 1.6;">Hello there! 👋</p>
+        
+        <p style="color: #374151; font-size: 16px; line-height: 1.6;">Thank you for joining Home Services Hub! To complete your registration and secure your account, please verify your email address using the OTP below:</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <div style="background-color: #f3f4f6; border: 2px dashed #2563eb; border-radius: 8px; padding: 20px; display: inline-block;">
+            <p style="margin: 0; color: #6b7280; font-size: 14px;">Your Verification Code</p>
+            <h1 style="margin: 10px 0 0 0; color: #2563eb; font-size: 32px; letter-spacing: 4px; font-weight: bold;">${otp}</h1>
+          </div>
+        </div>
+        
+        <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <p style="margin: 0; color: #92400e; font-size: 14px;">⏰ <strong>Important:</strong> This OTP expires in 10 minutes for your security.</p>
+        </div>
+        
+        <p style="color: #374151; font-size: 16px; line-height: 1.6;">Simply enter this code in the registration form to activate your account and start exploring our services.</p>
+        
+        <div style="background-color: #f9fafb; border-radius: 6px; padding: 15px; margin: 20px 0;">
+          <p style="margin: 0; color: #6b7280; font-size: 14px;">🔒 <strong>Security Note:</strong> If you didn't request this verification, please ignore this email. Your account remains secure.</p>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+        
+        <div style="text-align: center;">
+          <p style="color: #6b7280; font-size: 14px; margin: 0;">Need help? Contact our support team</p>
+          <p style="color: #6b7280; font-size: 14px; margin: 5px 0 0 0;">📧 support@homeserviceshub.com | 📞 +91-XXX-XXX-XXXX</p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+          <p style="color: #9ca3af; font-size: 12px; margin: 0;">© 2024 Home Services Hub. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
   `;
   return sendEmail({ to, subject, html });
 };

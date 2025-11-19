@@ -160,7 +160,7 @@ export const useAuthForm = (mode = "login", userType = "user") => {
         userType === "provider" && mode === "register"
           ? selectedServices
           : undefined,
-      otp: mode === "register" ? otp : undefined,
+      otp: mode === "register" && hasEmail ? otp : undefined,
     };
 
     let res;
@@ -178,10 +178,12 @@ export const useAuthForm = (mode = "login", userType = "user") => {
 
     if (res?.data?.user) {
       dispatch(login({ user: res.data.user }));
-      if (userType === "provider" && mode === "register") {
-        navigate("/loggedproviderprofile");
+      if (mode === "register") {
+        // Reload page for both user and provider registration
+        navigate(userType === "provider" ? "/loggedproviderprofile" : "/");
         window.location.reload();
       } else {
+        // FIXED: Provider login should go to /loggedproviderprofile
         navigate(userType === "provider" ? "/loggedproviderprofile" : "/");
       }
     }

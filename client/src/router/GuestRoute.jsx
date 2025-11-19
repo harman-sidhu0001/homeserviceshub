@@ -13,7 +13,7 @@ const GuestRoute = ({ children }) => {
 export const Provider = ({ children }) => {
   const { user, role } = useSelector((state) => state.auth);
   return (user && role === "provider") || role === "both" ? (
-    <Navigate to="/provider-profile" replace />
+    <Navigate to="/loggedproviderprofile" replace />
   ) : (
     children
   );

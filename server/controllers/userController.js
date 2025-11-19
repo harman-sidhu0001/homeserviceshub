@@ -464,6 +464,16 @@ export const rateService = asyncHandler(async (req, res) => {
   };
   await request.save();
 
+  // Create a Review document to maintain consistency with the Review model
+  const reviewDoc = new Review({
+    reviewBy: req.user._id,
+    reviewTo: request.providerId,
+    stars: rating,
+    reviewTitle: review || "Service Review",
+    reviewDescription: review,
+  });
+  await reviewDoc.save();
+
   // Update provider ratings using the new rating system
   const provider = await User.findById(request.providerId);
   if (provider) {

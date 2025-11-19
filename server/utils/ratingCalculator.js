@@ -23,6 +23,7 @@ export const calculateAvgRating = (reviews) => {
 
 /**
  * Calculate average response time rating based on response times
+ * Includes accepted, rejected, and completed requests (all have response times)
  * @param {Array} requests - Array of service request objects
  * @returns {number} Average rating between 0 and 5
  */
@@ -31,9 +32,13 @@ export const calculateAvgResponseTime = (requests) => {
     return 0;
   }
 
-  // Filter requests that have been responded to (accepted or rejected)
+  // Filter requests that have been responded to (accepted, rejected, or completed)
+  // Completed requests should be included as they have response times from when they were accepted
   const respondedRequests = requests.filter(
-    (request) => request.status === "accepted" || request.status === "rejected"
+    (request) =>
+      request.status === "accepted" ||
+      request.status === "rejected" ||
+      request.status === "completed"
   );
 
   if (respondedRequests.length === 0) {
@@ -75,6 +80,9 @@ export const calculateAvgResponseTime = (requests) => {
 
 /**
  * Calculate average request acceptance rate based on acceptance vs rejection
+ * Reputation is based on: (accepted + completed) / (accepted + rejected + completed)
+ * Only considers requests that have been responded to (accepted, rejected, or completed)
+ * Completed requests count as accepted since they were originally accepted
  * @param {Array} requests - Array of service request objects
  * @returns {number} Acceptance rate between 0 and 1
  */
@@ -83,18 +91,29 @@ export const calculateAvgRequestAcceptanceRate = (requests) => {
     return 0;
   }
 
-  const acceptedCompleted = requests.filter(
-    (request) => request.status === "accepted" || request.status === "completed"
-  ).length;
+  // Only consider requests that have been responded to (accepted, rejected, or completed)
+  // Completed requests count as accepted for reputation calculation
+  const respondedRequests = requests.filter(
+    (request) =>
+      request.status === "accepted" ||
+      request.status === "rejected" ||
+      request.status === "completed"
+  );
 
-  const totalRequests = requests.length;
-
-  if (totalRequests === 0) {
+  if (respondedRequests.length === 0) {
     return 0;
   }
 
-  // Calculate acceptance rate (0 to 1)
-  const acceptanceRate = acceptedCompleted / totalRequests;
+  // Count accepted and completed as accepted, rejected as rejected
+  const acceptedCount = respondedRequests.filter(
+    (request) => request.status === "accepted" || request.status === "completed"
+  ).length;
+
+  // Total responded requests (accepted + rejected + completed)
+  const totalResponded = respondedRequests.length;
+
+  // Calculate acceptance rate: (accepted + completed) / (accepted + rejected + completed)
+  const acceptanceRate = acceptedCount / totalResponded;
 
   return acceptanceRate;
 };
@@ -110,21 +129,25 @@ export const calculateOverallRating = (ratings) => {
   const availableRatings = [];
 
   // Only include ratings that have been calculated (not null/undefined)
-  if (avgReviewRating !== null && avgReviewRating !== undefined) {
+  // Include 0 values as they represent valid calculated ratings
+  if (avgReviewRating !== null && avgReviewRating !== undefined && !isNaN(avgReviewRating)) {
     availableRatings.push(avgReviewRating);
   }
-  if (avgResponseTime !== null && avgResponseTime !== undefined) {
+  // Include response time if it's a valid number (including 0)
+  if (avgResponseTime !== null && avgResponseTime !== undefined && !isNaN(avgResponseTime)) {
     availableRatings.push(avgResponseTime);
   }
+  // Include acceptance rate if it's a valid number (including 0)
   if (
     avgRequestAcceptanceRate !== null &&
-    avgRequestAcceptanceRate !== undefined
+    avgRequestAcceptanceRate !== undefined &&
+    !isNaN(avgRequestAcceptanceRate)
   ) {
-    // Convert acceptance rate (0-1) to 1-5 scale for overall rating
-    const normalizedAcceptanceRate = Math.max(
-      1,
-      Math.min(5, avgRequestAcceptanceRate * 5)
-    );
+    // avgRequestAcceptanceRate is now stored in 0-5 scale (from counters)
+    // If it's from requests calculation (0-1 scale), normalize it; otherwise use as-is
+    const normalizedAcceptanceRate = avgRequestAcceptanceRate <= 1 
+      ? Math.max(1, Math.min(5, avgRequestAcceptanceRate * 5)) // Normalize 0-1 to 1-5
+      : Math.max(0, Math.min(5, avgRequestAcceptanceRate)); // Already 0-5 scale, just clamp
     availableRatings.push(normalizedAcceptanceRate);
   }
 
@@ -235,8 +258,14 @@ export const updateServiceRequestRatings = (provider) => {
 
   // Calculate new service request ratings
   const newAvgResponseTime = calculateAvgResponseTime(requests);
-  const newAvgRequestAcceptanceRate =
-    calculateAvgRequestAcceptanceRate(requests);
+  
+  // Use provided avgRequestAcceptanceRate if explicitly set (e.g., from counter-based calculation)
+  // Otherwise calculate it from requests
+  // Note: We check if it's explicitly provided as a property, not just if it's truthy (0 is valid)
+  const newAvgRequestAcceptanceRate = 
+    'avgRequestAcceptanceRate' in provider && provider.avgRequestAcceptanceRate !== undefined
+      ? provider.avgRequestAcceptanceRate
+      : calculateAvgRequestAcceptanceRate(requests);
 
   // Calculate new overall rating including existing review rating
   const newOverallRating = calculateOverallRating({

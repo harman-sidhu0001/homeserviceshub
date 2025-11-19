@@ -185,7 +185,7 @@ export const useProviderProfileViewModel = () => {
   const ratingsProps = {
     overallRating: provider?.data.overallRating,
     avgRating: provider?.data.avgReviewRating,
-    reputation: provider?.data.overallRating,
+    reputation: provider?.data.avgRequestAcceptanceRate,
     responsiveness: provider?.data.avgResponseTime,
     availability: provider?.data.availability,
     projectsDone: provider?.data.projectsDone,
@@ -373,7 +373,7 @@ export const useLoggedProviderProfileViewModel = () => {
   const ratingsProps = {
     overallRating: provider?.data.overallRating,
     avgRating: provider?.data.avgReviewRating,
-    reputation: provider?.data.overallRating,
+    reputation: provider?.data.avgRequestAcceptanceRate,
     responsiveness: provider?.data.avgResponseTime,
     availability: provider?.data.availability,
     projectsDone: provider?.data.projectsDone,

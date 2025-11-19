@@ -48,10 +48,13 @@ const UserSchema = new mongoose.Schema(
       avgReviewRating: Number,
       avgResponseTime: Number,
       avgRequestAcceptanceRate: Number,
+      totalResponses: Number, // Counter for response time running average
       freeChangeRequests: { type: Number, default: undefined },
       availability: { type: [String], default: undefined },
       projectsDone: Number,
       projectsOngoing: Number,
+      totalAccepted: Number,
+      totalRejected: Number,
       yearOfEstablishment: Number,
       paymentMethods: { type: [String], default: undefined },
       services: { type: [String], default: undefined },

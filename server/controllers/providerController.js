@@ -12,9 +12,12 @@ import {
   deleteS3Object,
 } from "../utils/uploadHandler.js";
 import Review from "../models/Review.js";
-import { updateServiceRequestRatings } from "../utils/ratingCalculator.js";
+import { calculateOverallRating } from "../utils/ratingCalculator.js";
+import { calculateResponseTimeStars, updateRunningAverage } from "../utils/responseTimeCalculator.js";
 import ChangeRequest from "../models/ChangeRequest.js";
-import { sendCustomerServiceRequestStatusEmail } from "../services/emailService.js";
+import { sendCustomerServiceRequestStatusEmail, sendUserRegistrationOtpEmail } from "../services/emailService.js";
+import { generateOTP } from "../services/otpServices.js";
+import redis from "../config/redisClient.js";
 
 export const getServiceProviders = asyncHandler(async (req, res) => {
   let { service, city = "amritsar", sortBy = "reviews" } = req.query;
@@ -171,7 +174,7 @@ export const getProviderProfile = asyncHandler(async (req, res) => {
   const totalRequests = await ServiceRequest.countDocuments({ providerId: id });
   const completedRequests = await ServiceRequest.countDocuments({
     providerId: id,
-    status: "accepted",
+    status: "completed",
   });
   const pendingRequests = await ServiceRequest.countDocuments({
     providerId: id,
@@ -326,78 +329,182 @@ export const updateServiceRequestStatus = asyncHandler(async (req, res) => {
 
   const previousStatus = request.status;
 
-  // Update request status and response time
+  // Update request status
   request.status = status;
-  request.responseTime = new Date();
+  
+  // Only set responseTime if not already set (for accept/reject)
+  // Don't overwrite responseTime on completion - preserve the original acceptance time
+  if (status === "accepted" || status === "rejected") {
+    request.responseTime = new Date();
+  }
+  
   if (responseMessage) request.responseMessage = responseMessage;
   await request.save();
 
-  // Notify customer by email
-  let notifyStatus = undefined;
-  if (status === "accepted") notifyStatus = "requested"; // or "accepted" if you want a separate template
-  if (status === "rejected") notifyStatus = "rejected";
-  if (status === "completed") notifyStatus = "completed";
-  if (notifyStatus) {
-    const provider = await User.findById(request.providerId);
-    await sendCustomerServiceRequestStatusEmail({
-      status: notifyStatus,
-      customerEmail: request.customerDetails.email,
-      serviceName: request.serviceName,
-      providerName: provider?.providerProfile?.companyName,
-      description: request.description,
-      preferredDate: request.preferredDate,
-      location: request.location,
-      budget: request.budget,
-      propertyType: request.propertyType,
-      timeline: request.timeline,
-    });
-  }
-
-  // Update provider stats based on status
-  if (status === "accepted") {
-    // When provider accepts a request, increment ongoing projects
-    await User.findByIdAndUpdate(request.providerId, {
-      $inc: { "providerProfile.projectsOngoing": 1 },
-    });
-  } else if (status === "completed") {
-    // When provider marks as completed, decrement ongoing and increment completed
-    await User.findByIdAndUpdate(request.providerId, {
-      $inc: {
-        "providerProfile.projectsOngoing": -1,
-        "providerProfile.projectsDone": 1,
-      },
-    });
-  }
-
-  // Update provider ratings
+  // FIXED: Update provider ratings on accept/reject
   const provider = await User.findById(request.providerId);
   if (provider) {
-    // Get all service requests for this provider
-    const allRequests = await ServiceRequest.find({
-      providerId: request.providerId,
-    });
+    if (status === "accepted") {
+      // Get current provider data before incrementing
+      const currentProvider = await User.findById(request.providerId);
+      const currentTotalAccepted = currentProvider.providerProfile?.totalAccepted || 0;
+      const currentTotalRejected = currentProvider.providerProfile?.totalRejected || 0;
 
-    // Prepare provider data for rating calculation
-    const providerData = {
-      ...provider.toObject(),
-      requests: allRequests,
-      avgReviewRating: provider.providerProfile?.avgReviewRating || 0,
-    };
+      // Calculate new reputation: (accepted + 1) / (total + 1) * 5
+      const newTotalProjects = currentTotalAccepted + currentTotalRejected + 1;
+      const newReputationRate = ((currentTotalAccepted + 1) / newTotalProjects) * 5;
 
-    // Calculate updated service request ratings (response time and acceptance rate)
-    const ratingsUpdated = updateServiceRequestRatings(providerData);
+      // Calculate response time in minutes
+      const requestTime = new Date(request.createdAt);
+      const responseTime = new Date(request.responseTime);
+      const responseTimeMinutes = (responseTime - requestTime) / (1000 * 60);
 
-    // Update provider with new service request ratings
-    await User.findByIdAndUpdate(request.providerId, {
-      "providerProfile.avgResponseTime": ratingsUpdated.avgResponseTime,
-      "providerProfile.avgRequestAcceptanceRate":
-        ratingsUpdated.avgRequestAcceptanceRate,
-      "providerProfile.overallRating": ratingsUpdated.overallRating,
-    });
+      // Calculate star rating for this response
+      const newResponseStarRating = calculateResponseTimeStars(responseTimeMinutes);
+
+      // Get current average response time and total responses
+      const currentAvgResponseTime = currentProvider.providerProfile?.avgResponseTime || 0;
+      const currentTotalResponses = currentProvider.providerProfile?.totalResponses || 0;
+
+      // Calculate new average using running average formula
+      const newAvgResponseTime = updateRunningAverage(
+        currentAvgResponseTime,
+        currentTotalResponses,
+        newResponseStarRating
+      );
+
+      // Calculate overall rating using current review rating and newly calculated values
+      const newOverallRating = calculateOverallRating({
+        avgReviewRating: currentProvider.providerProfile?.avgReviewRating ?? null,
+        avgResponseTime: newAvgResponseTime,
+        avgRequestAcceptanceRate: newReputationRate,
+      });
+
+      // Update all counters, ratings, and overall rating in one operation
+      await User.findByIdAndUpdate(request.providerId, {
+        $inc: { 
+          "providerProfile.projectsOngoing": 1,
+          "providerProfile.totalAccepted": 1,
+          "providerProfile.totalResponses": 1,
+        },
+        $set: {
+          "providerProfile.avgRequestAcceptanceRate": newReputationRate,
+          "providerProfile.avgResponseTime": newAvgResponseTime,
+          "providerProfile.overallRating": newOverallRating,
+        },
+      });
+
+    } else if (status === "rejected") {
+      // Get current provider data before incrementing
+      const currentProvider = await User.findById(request.providerId);
+      const currentTotalAccepted = currentProvider.providerProfile?.totalAccepted || 0;
+      const currentTotalRejected = currentProvider.providerProfile?.totalRejected || 0;
+
+      // Calculate new reputation: accepted / (total + 1) * 5
+      // Note: accepted stays the same, total increases by 1
+      const newTotalProjects = currentTotalAccepted + currentTotalRejected + 1;
+      const newReputationRate = newTotalProjects > 0 
+        ? (currentTotalAccepted / newTotalProjects) * 5 
+        : 0;
+
+      // Calculate overall rating using current values and newly calculated reputation
+      const newOverallRating = calculateOverallRating({
+        avgReviewRating: currentProvider.providerProfile?.avgReviewRating ?? null,
+        avgResponseTime: currentProvider.providerProfile?.avgResponseTime ?? null,
+        avgRequestAcceptanceRate: newReputationRate,
+      });
+
+      // Increment rejected counter and update reputation and overall rating in one operation
+      await User.findByIdAndUpdate(request.providerId, {
+        $inc: { "providerProfile.totalRejected": 1 },
+        $set: {
+          "providerProfile.avgRequestAcceptanceRate": newReputationRate,
+          "providerProfile.overallRating": newOverallRating,
+        },
+      });
+    } else if (status === "completed") {
+      
+      await User.findByIdAndUpdate(request.providerId, {
+        $inc: {
+          "providerProfile.projectsOngoing": -1,
+          "providerProfile.projectsDone": 1,
+        },
+      });
+      
+      // Explicitly return early to prevent any rating recalculation
+      // Completion should never change response time, reputation, or overall rating
+      return res.status(200).json({
+        success: true,
+        data: request,
+      });
+    }
   }
 
   res.status(200).json({
     success: true,
+    data: request,
+  });
+});
+
+// @desc    Verify completion OTP and complete service
+export const verifyCompletionOtp = asyncHandler(async (req, res) => {
+  const { requestId, otp } = req.body;
+
+  if (!requestId || !otp) {
+    return res.status(400).json({ message: "Request ID and OTP are required" });
+  }
+
+  const request = await ServiceRequest.findById(requestId);
+  if (!request) {
+    return res.status(404).json({ message: "Service request not found" });
+  }
+
+  if (request.status !== "pending_completion") {
+    return res.status(400).json({ message: "Service is not pending completion" });
+  }
+
+  // Verify OTP
+  const otpKey = `completion-otp:${requestId}`;
+  const storedOtp = await redis.get(otpKey);
+
+  if (!storedOtp || storedOtp !== otp) {
+    return res.status(400).json({ message: "Invalid or expired OTP" });
+  }
+
+  // Complete the service
+  request.status = "completed";
+  request.completedAt = new Date();
+  await request.save();
+
+  // Update provider stats
+  await User.findByIdAndUpdate(request.providerId, {
+    $inc: {
+      "providerProfile.projectsOngoing": -1,
+      "providerProfile.projectsDone": 1,
+    },
+  });
+
+  // Clean up OTP
+  await redis.del(otpKey);
+
+  // Send completion email to customer
+  const provider = await User.findById(request.providerId);
+  await sendCustomerServiceRequestStatusEmail({
+    status: "completed",
+    customerEmail: request.customerDetails.email,
+    serviceName: request.serviceName,
+    providerName: provider?.providerProfile?.companyName,
+    description: request.description,
+    preferredDate: request.preferredDate,
+    location: request.location,
+    budget: request.budget,
+    propertyType: request.propertyType,
+    timeline: request.timeline,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Service completed successfully",
     data: request,
   });
 });
