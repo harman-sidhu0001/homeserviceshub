@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import CustomButton from "../common/Button";
+import { useState } from "react";
+import { toast } from "react-toastify";
 
 const ServiceRequestsBlock = ({
   requests,
@@ -7,6 +9,117 @@ const ServiceRequestsBlock = ({
   onUpdateStatus,
   onRefresh,
 }) => {
+  // State for OTP flow
+  const [showOtpInput, setShowOtpInput] = useState({});
+  const [otpValues, setOtpValues] = useState({});
+  const [otpLoading, setOtpLoading] = useState({});
+  const [verifyLoading, setVerifyLoading] = useState({});
+  const [resendLoading, setResendLoading] = useState({});
+
+  // OTP Handlers
+  const handleGetOtp = async (requestId) => {
+    setOtpLoading({ ...otpLoading, [requestId]: true });
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/api/providers/service-requests/${requestId}/request-completion-otp`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        setShowOtpInput({ ...showOtpInput, [requestId]: true });
+        toast.success(data.message || "OTP sent to customer email");
+      } else {
+        toast.error(data.message || "Failed to send OTP");
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to send OTP");
+    } finally {
+      setOtpLoading({ ...otpLoading, [requestId]: false });
+    }
+  };
+
+  const handleOtpChange = (requestId, value) => {
+    // Only allow digits and max 6 characters
+    if (/^\d{0,6}$/.test(value)) {
+      setOtpValues({ ...otpValues, [requestId]: value });
+    }
+  };
+
+  const handleVerifyOtp = async (requestId) => {
+    const otp = otpValues[requestId];
+    if (!otp || otp.length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP");
+      return;
+    }
+
+    setVerifyLoading({ ...verifyLoading, [requestId]: true });
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/providers/verify-completion-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ requestId, otp }),
+      });
+      const data = await response.json();
+      
+      // Check if response was successful
+      if (response.ok && data.success) {
+        toast.success("Service completed successfully!");
+        setShowOtpInput({ ...showOtpInput, [requestId]: false });
+        setOtpValues({ ...otpValues, [requestId]: "" });
+        if (onRefresh) onRefresh();
+      } else {
+        // Show error message from backend or default message
+        toast.error(data.message || "Invalid OTP. Please try again.");
+      }
+    } catch (error) {
+      console.error("OTP Verification Error:", error);
+      toast.error("Failed to verify OTP. Please try again.");
+    } finally {
+      setVerifyLoading({ ...verifyLoading, [requestId]: false });
+    }
+  };
+
+  const handleResendOtp = async (requestId) => {
+    setResendLoading({ ...resendLoading, [requestId]: true });
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/api/providers/service-requests/${requestId}/resend-completion-otp`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        setOtpValues({ ...otpValues, [requestId]: "" });
+        toast.success("New OTP sent to customer email");
+      } else {
+        toast.error(data.message || "Failed to resend OTP");
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to resend OTP");
+    } finally {
+      setResendLoading({ ...resendLoading, [requestId]: false });
+    }
+  };
+
+  const handleCancelOtp = (requestId) => {
+    setShowOtpInput({ ...showOtpInput, [requestId]: false });
+    setOtpValues({ ...otpValues, [requestId]: "" });
+  };
   // Get status badge color
   const getStatusBadgeColor = (status) => {
     switch (status) {
@@ -196,12 +309,59 @@ const ServiceRequestsBlock = ({
                 </div>
               )}
 
+              {/* OTP Completion Flow for Accepted Requests */}
               {request.status === "accepted" && (
-                <div className="flex gap-3 pt-4 border-t border-gray-200">
-                  <CustomButton
-                    text="Mark as Completed"
-                    onClick={() => onUpdateStatus(request._id, "completed")}
-                  />
+                <div className="pt-4 border-t border-gray-200">
+                  {!showOtpInput[request._id] ? (
+                    <CustomButton
+                      text="Get OTP for Completion"
+                      onClick={() => handleGetOtp(request._id)}
+                      loading={otpLoading[request._id]}
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex gap-2 items-end">
+                        <div className="flex-1">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Enter OTP (sent to customer email)
+                          </label>
+                          <input
+                            type="text"
+                            maxLength="6"
+                            placeholder="Enter 6-digit OTP"
+                            value={otpValues[request._id] || ""}
+                            onChange={(e) =>
+                              handleOtpChange(request._id, e.target.value)
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
+                        <CustomButton
+                          text="Verify & Complete"
+                          width={"auto"}
+                          onClick={() => handleVerifyOtp(request._id)}
+                          loading={verifyLoading[request._id]}
+                        />
+                      </div>
+                      <div className="flex justify-between">
+                        <button
+                          onClick={() => handleResendOtp(request._id)}
+                          disabled={resendLoading[request._id]}
+                          className="text-sm text-primary hover:underline disabled:opacity-50"
+                        >
+                          {resendLoading[request._id]
+                            ? "Sending..."
+                            : "Resend OTP"}
+                        </button>
+                        <button
+                          onClick={() => handleCancelOtp(request._id)}
+                          className="text-sm text-gray-600 hover:underline"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

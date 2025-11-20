@@ -1,17 +1,19 @@
 import nodemailer from "nodemailer";
-import { gmailConfig } from "../config/emailConfig.js";
+import { emailConfig } from "../config/emailConfig.js";
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtpout.secureserver.net",
+  port: 465,
+  secure: true,
   auth: {
-    user: gmailConfig.user,
-    pass: gmailConfig.pass,
+    user: emailConfig.user,
+    pass: emailConfig.pass,
   },
 });
 
 export const sendEmail = async ({ to, subject, html, text }) => {
   const mailOptions = {
-    from: gmailConfig.user,
+    from: `"Home Services Hub" <${emailConfig.user}>`,
     to,
     subject,
     html,
@@ -33,7 +35,7 @@ export const sendAdminNewServiceRequestEmail = async ({
   provider,
   to, // optional, for testing or override
 }) => {
-  const adminEmail = process.env.ADMIN_EMAIL || gmailConfig.user;
+  const adminEmail = process.env.ADMIN_EMAIL || emailConfig.user;
   const recipient = to || adminEmail;
   const subject = `New Service Request Registered: ${serviceName}`;
   const html = `
@@ -159,7 +161,7 @@ export const sendAdminNewRegistrationEmail = async ({
   services,
   serviceAreas,
 }) => {
-  const adminEmail = process.env.ADMIN_EMAIL || gmailConfig.user;
+  const adminEmail = process.env.ADMIN_EMAIL || emailConfig.user;
   let subject = "";
   let html = "";
 
@@ -237,7 +239,7 @@ export const sendUserRegistrationOtpEmail = async ({ to, otp }) => {
         
         <div style="text-align: center;">
           <p style="color: #6b7280; font-size: 14px; margin: 0;">Need help? Contact our support team</p>
-          <p style="color: #6b7280; font-size: 14px; margin: 5px 0 0 0;">📧 support@homeserviceshub.com | 📞 +91-XXX-XXX-XXXX</p>
+          <p style="color: #6b7280; font-size: 14px; margin: 5px 0 0 0;">📧 support@homeserviceshub.in | 📞 +91-9478556915</p>
         </div>
         
         <div style="text-align: center; margin-top: 20px;">
@@ -247,4 +249,88 @@ export const sendUserRegistrationOtpEmail = async ({ to, otp }) => {
     </div>
   `;
   return sendEmail({ to, subject, html });
+};
+
+// NEW: Service Completion OTP Email
+export const sendCompletionOtpEmail = async ({
+  to,
+  otp,
+  serviceName,
+  providerName,
+  isResend = false,
+}) => {
+  const subject = isResend
+    ? "🔄 New Service Completion OTP - Home Services Hub"
+    : "✅ Service Completion Verification - Home Services Hub";
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+      <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #10b981; margin: 0; font-size: 28px;">🏠 Home Services Hub</h1>
+          <p style="color: #6b7280; margin: 5px 0 0 0;">Your trusted service partner</p>
+        </div>
+        
+        <h2 style="color: #1f2937; margin-bottom: 20px;">✅ Service Completion Verification</h2>
+        
+        <p style="color: #374151; font-size: 16px; line-height: 1.6;">Dear Customer,</p>
+        
+        <p style="color: #374151; font-size: 16px; line-height: 1.6;"><strong>${providerName}</strong> has requested to mark your service <strong>${serviceName}</strong> as completed.</p>
+        
+        <p style="color: #374151; font-size: 16px; line-height: 1.6;">To verify and confirm the completion of this service, please provide the following OTP to your service provider:</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <div style="background-color: #ecfdf5; border: 3px solid #10b981; border-radius: 12px; padding: 25px; display: inline-block;">
+            <p style="margin: 0; color: #059669; font-size: 14px; font-weight: 600;">YOUR VERIFICATION CODE</p>
+            <h1 style="margin: 10px 0 0 0; color: #10b981; font-size: 42px; letter-spacing: 8px; font-weight: bold;">${otp}</h1>
+          </div>
+        </div>
+        
+        <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <p style="margin: 0; color: #92400e; font-size: 14px;">⏰ <strong>Valid for 60 minutes:</strong> This OTP will expire after 60 minutes for your security.</p>
+        </div>
+        
+        <div style="background-color: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <p style="margin: 0; color: #1e40af; font-size: 14px;">💡 <strong>What happens next:</strong> Once you provide this OTP to the provider, the service will be marked as completed in our system.</p>
+        </div>
+        
+        <p style="color: #374151; font-size: 16px; line-height: 1.6;">If you have any concerns about this completion request or if the service is not yet complete, please do not share this OTP and contact the provider immediately.</p>
+        
+        <div style="background-color: #f9fafb; border-radius: 6px; padding: 15px; margin: 20px 0;">
+          <p style="margin: 0; color: #6b7280; font-size: 14px;">🔒 <strong>Security Note:</strong> Never share this OTP with anyone except your service provider. If you didn't expect this message, please contact our support team immediately.</p>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+        
+        <div style="text-align: center;">
+          <p style="color: #6b7280; font-size: 14px; margin: 0;">Need assistance? We're here to help!</p>
+          <p style="color: #6b7280; font-size: 14px; margin: 5px 0 0 0;">📧 support@homeserviceshub.in | 📞 +91-9478556915</p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+          <p style="color: #9ca3af; font-size: 12px; margin: 0;">© 2024 Home Services Hub. All rights reserved.</p>
+          <p style="color: #9ca3af; font-size: 11px; margin: 5px 0 0 0;">This is an automated message. Please do not reply to this email.</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const text = `
+Service Completion Verification - Home Services Hub
+
+Dear Customer,
+
+${providerName} has requested to mark your service "${serviceName}" as completed.
+
+Your Verification OTP: ${otp}
+
+This OTP is valid for 60 minutes. Please provide this code to your service provider to confirm completion.
+
+If you have any concerns, please contact the provider immediately.
+
+Best regards,
+Home Services Hub Team
+  `;
+
+  return sendEmail({ to, subject, html, text });
 };

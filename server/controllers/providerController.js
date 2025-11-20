@@ -15,7 +15,7 @@ import Review from "../models/Review.js";
 import { calculateOverallRating } from "../utils/ratingCalculator.js";
 import { calculateResponseTimeStars, updateRunningAverage } from "../utils/responseTimeCalculator.js";
 import ChangeRequest from "../models/ChangeRequest.js";
-import { sendCustomerServiceRequestStatusEmail, sendUserRegistrationOtpEmail } from "../services/emailService.js";
+import { sendCustomerServiceRequestStatusEmail, sendUserRegistrationOtpEmail, sendCompletionOtpEmail } from "../services/emailService.js";
 import { generateOTP } from "../services/otpServices.js";
 import redis from "../config/redisClient.js";
 
@@ -444,6 +444,108 @@ export const updateServiceRequestStatus = asyncHandler(async (req, res) => {
     success: true,
     data: request,
   });
+});;
+
+// @desc    Generate and send OTP for service completion
+// @route   POST /api/providers/service-requests/:requestId/request-completion-otp
+// @access  Private (Provider)
+export const requestCompletionOtp = asyncHandler(async (req, res) => {
+  const { requestId } = req.params;
+
+  const request = await ServiceRequest.findById(requestId);
+  if (!request) {
+    return res.status(404).json({ message: "Service request not found" });
+  }
+
+  if (request.status !== "accepted") {
+    return res.status(400).json({
+      message: "Only accepted requests can be marked for completion",
+    });
+  }
+
+  const customerEmail = request.customerDetails?.email;
+  if (!customerEmail) {
+    return res.status(400).json({
+      message: "Customer email not found in request details",
+    });
+  }
+
+  // Generate 6-digit OTP
+  const otp = generateOTP();
+
+  // Store in Redis with 60-minute expiration (3600 seconds)
+  const otpKey = `completion-otp:${requestId}`;
+  await redis.set(otpKey, otp, "EX", 3600);
+
+  // Get provider details for email
+  const provider = await User.findById(request.providerId);
+  const providerName = provider?.providerProfile?.companyName || "Service Provider";
+
+  // Send OTP email to customer
+  await sendCompletionOtpEmail({
+    to: customerEmail,
+    otp,
+    serviceName: request.serviceName,
+    providerName,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: `OTP sent to customer email (${customerEmail})`,
+  });
+});
+
+// @desc    Resend OTP for service completion
+// @route   POST /api/providers/service-requests/:requestId/resend-completion-otp
+// @access  Private (Provider)
+export const resendCompletionOtp = asyncHandler(async (req, res) => {
+  const { requestId } = req.params;
+
+  const request = await ServiceRequest.findById(requestId);
+  if (!request) {
+    return res.status(404).json({ message: "Service request not found" });
+  }
+
+  if (request.status !== "accepted") {
+    return res.status(400).json({
+      message: "Only accepted requests can be marked for completion",
+    });
+  }
+
+  const customerEmail = request.customerDetails?.email;
+  if (!customerEmail) {
+    return res.status(400).json({
+      message: "Customer email not found in request details",
+    });
+  }
+
+  // Delete old OTP from Redis
+  const otpKey = `completion-otp:${requestId}`;
+  await redis.del(otpKey);
+
+  // Generate new 6-digit OTP
+  const otp = generateOTP();
+
+  // Store new OTP with 60-minute expiration
+  await redis.set(otpKey, otp, "EX", 3600);
+
+  // Get provider details for email
+  const provider = await User.findById(request.providerId);
+  const providerName = provider?.providerProfile?.companyName || "Service Provider";
+
+  // Send new OTP email with resend flag
+  await sendCompletionOtpEmail({
+    to: customerEmail,
+    otp,
+    serviceName: request.serviceName,
+    providerName,
+    isResend: true,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: `New OTP sent to customer email (${customerEmail})`,
+  });
 });
 
 // @desc    Verify completion OTP and complete service
@@ -459,8 +561,8 @@ export const verifyCompletionOtp = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "Service request not found" });
   }
 
-  if (request.status !== "pending_completion") {
-    return res.status(400).json({ message: "Service is not pending completion" });
+  if (request.status !== "accepted") {
+    return res.status(400).json({ message: "Only accepted requests can be completed" });
   }
 
   // Verify OTP

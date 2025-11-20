@@ -243,7 +243,7 @@ const LoggedProviderProfileView = () => {
               requests={vm.serviceRequests}
               loading={vm.loading}
               onUpdateStatus={vm.handleUpdateRequestStatus}
-              onRefresh={vm.fetchServiceRequests}
+              onRefresh={vm.fetchProviderProfile}
             />
           )}
         </div>

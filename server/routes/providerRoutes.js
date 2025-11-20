@@ -9,6 +9,8 @@ import {
   uploadGalleryImage,
   getProviderServiceRequests,
   updateServiceRequestStatus,
+  requestCompletionOtp,
+  resendCompletionOtp,
   verifyCompletionOtp,
   getProviderAnalytics,
   requestProviderVerification,
@@ -39,7 +41,9 @@ router.delete("/gallery-image", authenticate, deleteGalleryImage);
 // Service requests management
 router.get("/:id/service-requests", getProviderServiceRequests);
 router.put("/service-requests/:requestId/status", updateServiceRequestStatus);
-router.post("/verify-completion-otp", verifyCompletionOtp); // NEW: OTP verification for completion
+router.post("/service-requests/:requestId/request-completion-otp", requestCompletionOtp);
+router.post("/service-requests/:requestId/resend-completion-otp", resendCompletionOtp);
+router.post("/verify-completion-otp", verifyCompletionOtp); // OTP verification for completion
 
 // Analytics
 router.get("/:id/analytics", getProviderAnalytics);
