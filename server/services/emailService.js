@@ -1,28 +1,29 @@
-import nodemailer from "nodemailer";
+import { Resend } from 'resend';
 import { emailConfig } from "../config/emailConfig.js";
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: emailConfig.user,
-    pass: emailConfig.pass,
-  },
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
-  logger: true,
-  debug: true,
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendEmail = async ({ to, subject, html, text }) => {
-  const mailOptions = {
-    from: `"Home Services Hub" <${emailConfig.user}>`,
-    to,
-    subject,
-    html,
-    text,
-  };
-  return transporter.sendMail(mailOptions);
+  try {
+    const { data, error } = await resend.emails.send({
+      from: `"Home Services Hub" <${process.env.EMAIL_FROM}>`,
+      to: Array.isArray(to) ? to : [to],
+      subject,
+      html,
+      text,
+    });
+
+    if (error) {
+      console.error("Resend Error:", error);
+      throw error;
+    }
+    
+    console.log("Email sent successfully:", data);
+    return data;
+  } catch (error) {
+    console.error("Failed to send email:", error);
+    throw error;
+  }
 };
 
 // 1. Admin: New Service Request Notification
