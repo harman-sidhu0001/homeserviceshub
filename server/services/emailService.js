@@ -2,13 +2,20 @@ import nodemailer from "nodemailer";
 import { emailConfig } from "../config/emailConfig.js";
 
 const transporter = nodemailer.createTransport({
-  host: "smtpout.secureserver.net",
-  port: 587,
-  secure: true,
+  host: process.env.SMTP_HOST || "smtpout.secureserver.net",
+  port: parseInt(process.env.SMTP_PORT || "465"),
+  secure: process.env.SMTP_SECURE !== undefined 
+    ? process.env.SMTP_SECURE === "true" 
+    : (parseInt(process.env.SMTP_PORT || "465") === 465), // true for 465, false for other ports
   auth: {
     user: emailConfig.user,
     pass: emailConfig.pass,
   },
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
+  logger: true,
+  debug: true,
 });
 
 export const sendEmail = async ({ to, subject, html, text }) => {
