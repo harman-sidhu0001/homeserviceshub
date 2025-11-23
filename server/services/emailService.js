@@ -2,11 +2,7 @@ import nodemailer from "nodemailer";
 import { emailConfig } from "../config/emailConfig.js";
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtpout.secureserver.net",
-  port: parseInt(process.env.SMTP_PORT || "465"),
-  secure: process.env.SMTP_SECURE !== undefined 
-    ? process.env.SMTP_SECURE === "true" 
-    : (parseInt(process.env.SMTP_PORT || "465") === 465), // true for 465, false for other ports
+  service: "gmail",
   auth: {
     user: emailConfig.user,
     pass: emailConfig.pass,

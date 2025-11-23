@@ -1,5 +1,5 @@
 export const emailConfig = {
-  user: process.env.EMAIL_USER,
-  pass: process.env.EMAIL_PASS,
+  user: process.env.GMAIL_USER,
+  pass: process.env.GMAIL_PASS,
 };
 console.log(emailConfig);
