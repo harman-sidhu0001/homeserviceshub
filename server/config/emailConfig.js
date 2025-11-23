@@ -2,3 +2,4 @@ export const emailConfig = {
   user: process.env.EMAIL_USER,
   pass: process.env.EMAIL_PASS,
 };
+console.log(emailConfig);
