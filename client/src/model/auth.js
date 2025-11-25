@@ -16,7 +16,7 @@ export const checkAuthStatus = () => axiosClient.get("/auth/status");
 export const logoutUser = () => axiosClient.post("/auth/logout");
 export const refreshAccessToken = () => axiosClient.post("/auth/refresh");
 
-export const sendRegistrationOtp = (email) =>
-  axiosClient.post("/auth/send-registration-otp", { email });
+export const sendRegistrationOtp = (email, userType = "user") =>
+  axiosClient.post("/auth/send-registration-otp", { email, userType });
 export const verifyRegistrationOtp = (email, otp) =>
   axiosClient.post("/auth/verify-registration-otp", { email, otp });

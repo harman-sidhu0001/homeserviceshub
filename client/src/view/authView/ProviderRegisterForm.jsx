@@ -7,6 +7,8 @@ import { IoClose } from "react-icons/io5";
 import FormInput from "../../components/common/FormInput";
 import CustomButton from "../../components/common/Button";
 import AvailabilitySelector from "../../components/common/AvailabilitySelector";
+import LocationSelector from "../../components/common/LocationSelector";
+import ServiceAreaSelector from "../../components/common/ServiceAreaSelector";
 import { useAuthForm } from "../../viewModel/authViewModel";
 
 const ProviderRegisterForm = () => {
@@ -31,6 +33,7 @@ const ProviderRegisterForm = () => {
     otpError,
     handleSendOtp,
     handleVerifyOtp,
+    setValue,
   } = useAuthForm("register", "provider");
 
   // Remove the old availability days array since we're using the new component
@@ -175,11 +178,9 @@ const ProviderRegisterForm = () => {
             />
 
             {/* Location */}
-            <FormInput
-              type="text"
-              placeholder="Location"
-              {...register("location")}
-              error={errors.location?.message}
+            <LocationSelector
+              setValue={setValue}
+              errors={errors}
             />
 
             {/* Total Workers */}
@@ -215,28 +216,10 @@ const ProviderRegisterForm = () => {
             </div>
 
             {/* Service Areas */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Service Areas
-              </label>
-              <div className="border rounded p-2">
-                {serviceAreas.map((area) => (
-                  <label key={area} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      value={area}
-                      {...register("serviceAreas")}
-                    />
-                    <span>{area}</span>
-                  </label>
-                ))}
-              </div>
-              {errors.serviceAreas && (
-                <p className="text-red-500 text-sm">
-                  {errors.serviceAreas.message}
-                </p>
-              )}
-            </div>
+            <ServiceAreaSelector
+              setValue={setValue}
+              errors={errors}
+            />
 
             {/* Services */}
             <div className="space-y-2">

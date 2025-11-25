@@ -9,7 +9,7 @@ import CustomButton from "../../components/common/Button";
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const { register, handleSubmit, errors, onSubmit } = useAuthForm("login");
+  const { register, handleSubmit, errors, onSubmit, loading, error } = useAuthForm("login");
 
   return (
     <motion.section
@@ -29,6 +29,13 @@ const LoginForm = () => {
         <div className="w-full md:w-1/2 p-8 md:p-12">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Log In</h1>
           <p className="text-gray-600 mb-6">Access your dashboard.</p>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <FormInput
               type="email"
@@ -43,7 +50,12 @@ const LoginForm = () => {
               {...register("password")}
               error={errors.password?.message}
             />
-            <CustomButton type="submit" text="Log In" height="auto" />
+            <CustomButton 
+              type="submit" 
+              text={loading ? "Logging in..." : "Log In"} 
+              height="auto"
+              disabled={loading}
+            />
             <p className="text-sm text-accent mt-2">
               Don’t have an account?{" "}
               <Link to="/register" className="text-primary hover:underline">

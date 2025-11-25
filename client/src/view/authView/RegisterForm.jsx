@@ -6,6 +6,7 @@ import { IoClose } from "react-icons/io5";
 import { useAuthForm } from "../../viewModel/authViewModel";
 import FormInput from "../../components/common/FormInput";
 import CustomButton from "../../components/common/Button";
+import LocationSelector from "../../components/common/LocationSelector";
 
 const RegisterForm = () => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const RegisterForm = () => {
     handleVerifyOtp,
     loading,
     error,
+    setValue,
   } = useAuthForm("register");
 
   return (
@@ -111,11 +113,9 @@ const RegisterForm = () => {
               {...register("phone")}
               error={errors.phone?.message}
             />
-            <FormInput
-              type="text"
-              placeholder="City"
-              {...register("location")}
-              error={errors.location?.message}
+            <LocationSelector
+              setValue={setValue}
+              errors={errors}
             />
             {error && <div className="text-red-500 text-sm">{error}</div>}
             <CustomButton

@@ -20,10 +20,10 @@ const InfoCard = ({ title, value }) => (
 );
 
 const detailsFields = [
-  { key: "serviceAreas", label: "Areas Served", render: (v) => v?.join(", ") },
   { key: "yearOfEstablishment", label: "Year of Established" },
   { key: "paymentMethod", label: "Payment method" },
   { key: "totalWorkers", label: "Number of workers" },
+  { key: "serviceAreas", label: "Areas Served", render: (v) => v?.join(", ") },
 ];
 
 const OtherDetailsBlock = ({ details }) => (

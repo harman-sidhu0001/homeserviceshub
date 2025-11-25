@@ -104,7 +104,7 @@ export const useAuthForm = (mode = "login", userType = "user") => {
         setOtpLoading(false);
         return;
       }
-      await sendRegistrationOtp(email);
+      await sendRegistrationOtp(email,userType);
       setOtpSent(true);
     } catch (err) {
       setOtpError(
@@ -179,11 +179,11 @@ export const useAuthForm = (mode = "login", userType = "user") => {
     if (res?.data?.user) {
       dispatch(login({ user: res.data.user }));
       if (mode === "register") {
-        // Reload page for both user and provider registration
-        navigate(userType === "provider" ? "/loggedproviderprofile" : "/");
+        // Navigate to profile pages after registration
+        navigate(userType === "provider" ? "/loggedproviderprofile" : "/loggeduserprofile");
         window.location.reload();
       } else {
-        // FIXED: Provider login should go to /loggedproviderprofile
+        // Login navigation
         navigate(userType === "provider" ? "/loggedproviderprofile" : "/");
       }
     }

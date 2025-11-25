@@ -31,20 +31,20 @@ router.get("/status", authenticate, authStatus);
 router.post("/refresh", refreshAccessToken);
 router.post(
   "/send-otp",
-  rateLimitPerUser("otp-req", 3, 600), // 3 requests / 10 min
+  rateLimitPerUser("otp-req", 5, 600), // 5 requests / 10 min
   sendOTP
 );
 
 router.post(
   "/confirm-otp",
-  rateLimitPerUser("otp-confirm", 5, 300), // 5 retries / 5 min
+  rateLimitPerUser("otp-confirm", 5, 600), // 5 retries / 10 min
   confirmOTP
 );
 
 // Registration OTP routes
 router.post(
   "/send-registration-otp",
-  rateLimitPerUser("reg-otp-req", 3, 600), // 3 requests / 10 min
+  rateLimitPerUser("reg-otp-req", 5, 600), // 5 requests / 10 min
   sendRegistrationOtp
 );
 router.post(

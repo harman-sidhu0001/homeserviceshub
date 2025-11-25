@@ -133,7 +133,7 @@ export const registerUser = async (req, res) => {
 
     return res
       .status(201)
-      .json({ token, message: "User registration successful" });
+      .json({ token, user: savedUser, message: "User registration successful" });
   } catch (err) {
     console.error("User registration error:", err);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -148,7 +148,6 @@ export const registerProvider = asyncHandler(async (req, res) => {
     password,
     email,
     location,
-    intro = "",
     availability = [],
     yearEstablished,
     paymentMethods = [],
@@ -162,11 +161,11 @@ export const registerProvider = asyncHandler(async (req, res) => {
   const providerEmail = email?.toLowerCase();
   const locationLower = location.toLowerCase();
   const existingByEmail = providerEmail
-    ? await User.findOne({ email: providerEmail })
+    ? await User.findOne({ "userProfile.email": providerEmail })
     : null;
   const existingByPhone = await User.findOne({ "userProfile.phone": phone });
 
-  const existing = existingByEmail || existingByPhone;
+  const existing = existingByPhone;
   const passwordHash = await bcrypt.hash(password, 12);
 
   // Convert array of customFields (e.g., [{ key: 'certification', value: 'ISO' }]) into an object
@@ -255,19 +254,29 @@ export const registerProvider = asyncHandler(async (req, res) => {
   await storeRefreshToken(user._id.toString(), refreshToken);
   setAuthCookie(res, token, refreshToken);
 
-  // Send admin notification for new provider registration
-  await sendAdminNewRegistrationEmail({
-    type: "provider",
-    companyName,
-    companyEmail: providerEmail,
-    phone,
-    location: locationLower,
-    services,
-    serviceAreas,
-  });
+  // Send admin notification for new provider registration - WRAPPED IN TRY-CATCH
+  try {
+    await sendAdminNewRegistrationEmail({
+      type: "provider",
+      companyName,
+      companyEmail: providerEmail,
+      phone,
+      location: locationLower,
+      services,
+      serviceAreas,
+    });
+    console.log(`✅ Admin notification sent for new provider: ${companyName}`);
+  } catch (emailError) {
+    console.error(
+      `❌ Failed to send admin notification for provider ${companyName}:`,
+      emailError
+    );
+    // Continue with registration even if email fails
+  }
 
   return res.status(201).json({
     token,
+    user,
     message: "Provider registration successful",
   });
 });
@@ -485,7 +494,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
 
 // @desc    Send registration OTP
 export const sendRegistrationOtp = asyncHandler(async (req, res) => {
-  const { email } = req.body;
+  const { email, userType } = req.body;
 
   if (!email) {
     return res.status(400).json({ message: "Email is required" });
@@ -493,13 +502,14 @@ export const sendRegistrationOtp = asyncHandler(async (req, res) => {
 
   const emailLower = email.toLowerCase();
 
-  // Check if user already exists
-  const existingUser = await User.findOne({
-    $or: [
-      { "userProfile.email": emailLower },
-      { "providerProfile.email": emailLower },
-    ],
-  });
+  // Check if email already exists based on registration type
+  let existingUser;
+  if (userType === "provider") {
+    existingUser = await User.findOne({ "providerProfile.providerEmail": emailLower });
+  } else {
+    // Default to user check
+    existingUser = await User.findOne({ "userProfile.email": emailLower });
+  }
 
   if (existingUser) {
     return res.status(400).json({ message: "Email already registered" });
@@ -517,7 +527,7 @@ export const sendRegistrationOtp = asyncHandler(async (req, res) => {
     await redis.expire(otpReqKey, 600); // 10-min window
   }
 
-  if (reqCount > 3) {
+  if (reqCount > 10) {
     return res.status(429).json({
       message: "Too many OTP requests. Try again later.",
     });

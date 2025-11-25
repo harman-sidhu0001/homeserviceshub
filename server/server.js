@@ -44,8 +44,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
 
-// Optional global throttle: 100 requests / 15 mins per IP
-app.use(rateLimitPerIP("global", 100, 900)); // 15 mins
+// Optional global throttle: 200 requests / 10 mins per IP
+app.use(rateLimitPerIP("global", 200, 600)); // 10 mins
 
 // Redis check
 redis.on("connect", () => {
