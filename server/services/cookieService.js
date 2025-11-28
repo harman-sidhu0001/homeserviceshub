@@ -1,29 +1,18 @@
 const setAuthCookie = (res, token, refreshToken) => {
-  // Get the origin from the request to determine the domain
-  const origin = res.req.headers.origin;
   const isProduction = process.env.NODE_ENV === "production";
-
-  // Determine if we're dealing with cross-domain requests
-  const isCrossDomain = origin && origin !== res.req.headers.host;
 
   // Cookie options
   const cookieOptions = {
     httpOnly: true,
-    secure: isProduction, // Only secure in production
-    sameSite: "none", // Use None for cross-domain, Lax for same domain
+    secure: isProduction, // true in production, false in development
+    sameSite: isProduction ? "none" : "lax", // None for cross-site (prod), Lax for local
     maxAge: 1000 * 60 * 15, // 15 minutes
+    // domain: undefined, // Let browser handle domain (host-only)
   };
 
-  // For Railway/Render, we don't set domain - let the browser handle it
-  // Setting domain to .railway.app causes "invalid domain" error
-  // The browser will automatically send cookies to the correct domain
-
   console.log("Setting cookies with options:", {
-    origin,
     isProduction,
-    isCrossDomain,
     cookieOptions,
-    host: res.req.headers.host,
   });
 
   res.cookie("token", token, cookieOptions);
@@ -32,7 +21,7 @@ const setAuthCookie = (res, token, refreshToken) => {
   const refreshCookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: "none",
+    sameSite: isProduction ? "none" : "lax",
     maxAge: 1000 * 60 * 60 * 24 * 90, // 90 days
   };
 

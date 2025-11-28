@@ -373,18 +373,13 @@ export const logout = asyncHandler(async (req, res) => {
   const userId = req.user?.id;
   if (userId) await deleteRefreshToken(userId); // Redis
 
-  // Clear cookies with proper options for cross-domain
-  const origin = req.headers.origin;
   const isProduction = process.env.NODE_ENV === "production";
-  const isCrossDomain = origin && origin !== req.headers.host;
 
   const clearOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: "none", // Use none for cross-domain
+    sameSite: isProduction ? "none" : "lax",
   };
-
-  // Don't set domain for Railway - let browser handle it
 
   res.clearCookie("token", clearOptions);
   res.clearCookie("refreshToken", clearOptions);

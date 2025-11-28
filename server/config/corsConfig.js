@@ -7,7 +7,8 @@ const corsOptions = {
     credentials: true,
     optionsSuccessStatus: 200,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Cookie"],
+    exposedHeaders: ["Set-Cookie"],
   },
   production: {
     origin: function (origin, callback) {
@@ -50,7 +51,8 @@ const corsOptions = {
     credentials: true,
     optionsSuccessStatus: 200,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Cookie"],
+    exposedHeaders: ["Set-Cookie"],
   },
 };
 

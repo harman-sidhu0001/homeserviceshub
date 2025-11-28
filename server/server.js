@@ -35,7 +35,7 @@ const corsOptions = getCorsOptions();
 console.log("🔗 CORS Configuration:", {
   environment: process.env.NODE_ENV || "development",
   origins: corsOptions.origin,
-  credentials: corsOptions.credentials,
+  credentials: true,
 });
 
 app.use(cors(corsOptions));

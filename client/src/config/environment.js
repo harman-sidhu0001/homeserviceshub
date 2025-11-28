@@ -6,7 +6,7 @@ export const config = {
     appURL: "http://localhost:5173",
   },
   production: {
-    apiBaseURL: "https://homeserviceshub-production.up.railway.app/api",
+    apiBaseURL: "https://api.homeserviceshub.in/api",
     appName: "HomeServicesHub",
     appURL: "https://homeserviceshub.in" || "https://www.homeserviceshub.in",
   },
