@@ -27,6 +27,7 @@ import ContactUsPage from "../pages/ContactUsPage";
 import AboutUsPage from "../pages/AboutUsPage";
 import PrivacyPolicyPage from "../pages/PrivacyPolicyPage";
 import TermsOfUsePage from "../pages/TermsOfUsePage";
+import HowItWorksPage from "../pages/HowItWorksPage";
 
 const AppRouter = () => (
   <Routes>
@@ -39,7 +40,7 @@ const AppRouter = () => (
       path="/loggedproviderprofile"
       element={<LoggedProviderProfilePage />}
     />
-    <Route path="/how-it-works" element={<div>How It Works Page</div>} />
+    <Route path="/how-it-works" element={<HowItWorksPage />} />
     <Route path="/contact" element={<ContactUsPage />} />
     <Route path="/about" element={<AboutUsPage />} />
     <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />

@@ -6,6 +6,7 @@ import connectDB from "./config/db.js";
 import redis from "./config/redisClient.js";
 import errorHandler from "./middleware/errorHandler.js";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
 import { getCorsOptions } from "./config/corsConfig.js";
 import { currentConfig } from "./config/environment.js";
 
@@ -31,29 +32,29 @@ connectDB();
 const app = express();
 
 // Middlewares
+// Middlewares
 const corsOptions = getCorsOptions();
-console.log("🔗 CORS Configuration:", {
-  environment: process.env.NODE_ENV || "development",
-  origins: corsOptions.origin,
-  credentials: true,
-});
 
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(helmet());
 app.use(morgan("dev"));
 
 // Optional global throttle: 200 requests / 10 mins per IP
 app.use(rateLimitPerIP("global", 200, 600)); // 10 mins
 
 // Redis check
-redis.on("connect", () => {
-  console.log("✅ Redis connected");
-});
-redis.on("error", (err) => {
-  console.error("❌ Redis connection error:", err);
-});
+// Redis check
+if (process.env.NODE_ENV !== "production") {
+  redis.on("connect", () => {
+    console.log("✅ Redis connected");
+  });
+  redis.on("error", (err) => {
+    console.error("❌ Redis connection error:", err);
+  });
+}
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -76,7 +77,9 @@ app.use(errorHandler);
 // Server Start
 const PORT = currentConfig.port;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`🔗 CORS Origins Count: ${currentConfig.corsOrigins.length}`);
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
+    console.log(`🔗 CORS Origins Count: ${currentConfig.corsOrigins.length}`);
+  }
 });

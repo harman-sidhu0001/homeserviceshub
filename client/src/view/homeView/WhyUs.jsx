@@ -4,17 +4,20 @@ import { MdVerifiedUser, MdHeadsetMic, MdTouchApp } from "react-icons/md";
 const usps = [
   {
     title: "Vetted Providers",
-    description: "All providers with verified tick are verified.",
+    description:
+      "Every provider on our platform undergoes a rigorous verification process, including background checks and skill assessments. Look for the verified tick to ensure you are hiring a trusted professional for your home.",
     icon: MdVerifiedUser,
   },
   {
-    title: "24/7 Support",
-    description: "Get help anytime you need it.",
+    title: "Dedicated Support",
+    description:
+      "Our support team is available around the clock to assist with your bookings and queries. We prioritize your peace of mind, ensuring that help is always just a message or call away whenever you need it.",
     icon: MdHeadsetMic,
   },
   {
-    title: "Easy Booking",
-    description: "Book services in just a few clicks.",
+    title: "Seamless Booking",
+    description:
+      "Experience a hassle-free booking process designed for your convenience. Browse profiles, compare reviews, and schedule your service in minutes, all from the comfort of your home.",
     icon: MdTouchApp,
   },
 ];

@@ -3,6 +3,7 @@ import HomeFooter from "./components/layout/HomeFooter";
 import AppRouter from "./router/AppRouter";
 import { useAuthCheck } from "./viewModel/authViewModel";
 import SEO from "./components/SEO";
+import CookieConsent from "./components/common/CookieConsent";
 
 const App = () => {
   useAuthCheck();
@@ -15,6 +16,7 @@ const App = () => {
         <AppRouter />
       </main>
       <HomeFooter />
+      <CookieConsent />
     </div>
   );
 };
