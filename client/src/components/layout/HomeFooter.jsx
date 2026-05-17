@@ -78,7 +78,7 @@ const HomeFooter = () => {
           <ul className="space-y-2 text-sm text-gray-200">
             <li>
               <Link
-                to="/provider/login"
+                to="/provider-login"
                 className="hover:text-white transition"
               >
                 Login
@@ -86,7 +86,7 @@ const HomeFooter = () => {
             </li>
             <li>
               <Link
-                to="/provider/signup"
+                to="/provider-register"
                 className="hover:text-white transition"
               >
                 Sign Up

@@ -5,7 +5,7 @@
 # HomeServicesHub
 
 **Scalable cloud-based marketplace connecting users with trusted local service providers**  
-*through intelligent search, structured booking workflows, and role-based system architecture.*
+_through intelligent search, structured booking workflows, and role-based system architecture._
 
 [![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-homeserviceshub.in-4f46e5?style=for-the-badge)](https://homeserviceshub.in)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
@@ -21,34 +21,35 @@
 ## 📸 Platform Preview
 
 ### 🏠 Home Page
+
 ![Home Page](./client/public/assets/screenshots/search%20providers.png)
 
 ---
 
 ### 🔍 Provider Search — Step by Step
 
-| Step 1 — Browse & Filter | Step 2 — Select Provider |
-|:---:|:---:|
+|                               Step 1 — Browse & Filter                                |                               Step 2 — Select Provider                                |
+| :-----------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------: |
 | ![Search Step 1](./client/public/assets/screenshots/search%20provider%20step%201.png) | ![Search Step 2](./client/public/assets/screenshots/search%20provider%20step%202.png) |
 
-| Step 3 — View Full Profile |
-|:---:|
+|                              Step 3 — View Full Profile                               |
+| :-----------------------------------------------------------------------------------: |
 | ![Search Step 3](./client/public/assets/screenshots/search%20provider%20step%203.png) |
 
 ---
 
 ### 📋 Multi-Step Booking Workflow
 
-| Step 1 — Choose Service | Step 2 — Describe Job |
-|:---:|:---:|
+|                           Step 1 — Choose Service                            |                            Step 2 — Describe Job                             |
+| :--------------------------------------------------------------------------: | :--------------------------------------------------------------------------: |
 | ![Book Step 1](./client/public/assets/screenshots/book%20ACE%20step%201.png) | ![Book Step 2](./client/public/assets/screenshots/book%20ACE%20step%202.png) |
 
-| Step 3 — Set Location & Time | Step 4 — Confirm Details |
-|:---:|:---:|
+|                         Step 3 — Set Location & Time                         |                           Step 4 — Confirm Details                           |
+| :--------------------------------------------------------------------------: | :--------------------------------------------------------------------------: |
 | ![Book Step 3](./client/public/assets/screenshots/book%20ACE%20step%203.png) | ![Book Step 4](./client/public/assets/screenshots/book%20ACE%20step%204.png) |
 
-| Step 5 — Submit Request |
-|:---:|
+|                           Step 5 — Submit Request                            |
+| :--------------------------------------------------------------------------: |
 | ![Book Step 5](./client/public/assets/screenshots/book%20ACE%20step%205.png) |
 
 ---
@@ -78,6 +79,7 @@ The platform supports **three distinct user roles** — Customers, Service Provi
 ## ✨ Key Features
 
 ### For Customers
+
 - 🔍 **Intelligent Provider Discovery** — category, location, rating, and availability filters
 - 📋 **5-Step Guided Booking Workflow** — structured service request with job description, location, timing, and custom notes
 - ⭐ **Review & Rating System** — submit and browse verified reviews per provider
@@ -85,6 +87,7 @@ The platform supports **three distinct user roles** — Customers, Service Provi
 - 👤 **User Profile Management** — personal dashboard and account settings
 
 ### For Service Providers
+
 - 🏢 **Rich Provider Profiles** — company intro, gallery, awards, availability schedule, service areas, payment methods
 - 📊 **Analytics Dashboard** — request volume, response rate, project history, rating breakdown
 - 📥 **Incoming Request Management** — accept/reject service requests with tracked response times
@@ -92,12 +95,14 @@ The platform supports **three distinct user roles** — Customers, Service Provi
 - 🔄 **Change Requests** — update profile details (10 free changes included)
 
 ### For Administrators
+
 - 🛡️ **Admin Dashboard** — platform-wide stats (users, providers, requests, services)
 - ✅ **Provider Verification Panel** — review ID proofs and approve/reject providers
 - 📦 **Full CRUD Management** — users, providers, services, trending services, service requests
 - 📧 **Automated Notification Emails** — new registrations, verification status changes
 
 ### Platform-Wide
+
 - 🔐 **JWT Auth with Dual-Token Lifecycle** — 15-min access token + 90-day refresh token stored in Redis
 - 🚦 **Multi-layer Rate Limiting** — per-IP global throttle (200 req / 10 min) + per-user route-level limits
 - 🌐 **SEO Optimized** — `react-helmet-async`, sitemap, `robots.txt`, semantic HTML
@@ -109,40 +114,43 @@ The platform supports **three distinct user roles** — Customers, Service Provi
 ## 🏗️ Tech Stack
 
 ### Frontend
-| Technology | Role |
-|---|---|
-| **React 18** + **Vite 6** | UI framework and build tooling |
-| **Tailwind CSS v4** | Utility-first styling system |
-| **React Router DOM v7** | Client-side routing (28 pages) |
-| **Redux Toolkit** | Client-side global state management |
-| **TanStack Query v5** | Server state, caching, and background refetch |
-| **React Hook Form** + **Zod** | Form management and schema validation |
-| **Framer Motion** | Animations and micro-interactions |
-| **Axios** | HTTP client with credentials support |
-| **react-helmet-async** | SEO meta tag management |
+
+| Technology                    | Role                                          |
+| ----------------------------- | --------------------------------------------- |
+| **React 18** + **Vite 6**     | UI framework and build tooling                |
+| **Tailwind CSS v4**           | Utility-first styling system                  |
+| **React Router DOM v7**       | Client-side routing (28 pages)                |
+| **Redux Toolkit**             | Client-side global state management           |
+| **TanStack Query v5**         | Server state, caching, and background refetch |
+| **React Hook Form** + **Zod** | Form management and schema validation         |
+| **Framer Motion**             | Animations and micro-interactions             |
+| **Axios**                     | HTTP client with credentials support          |
+| **react-helmet-async**        | SEO meta tag management                       |
 
 ### Backend
-| Technology | Role |
-|---|---|
-| **Node.js** + **Express.js v5** | REST API server |
-| **Mongoose v8** | MongoDB ODM |
-| **jsonwebtoken** | JWT access & refresh token signing |
-| **bcryptjs** | Password hashing (cost factor 12) |
-| **ioredis** | Redis client for token store & OTP cache |
-| **multer** + **multer-s3** | File upload pipeline to AWS S3 |
-| **nodemailer** + **resend** | Dual email provider (OTP, notifications) |
-| **helmet** | HTTP security headers |
-| **express-rate-limit** | IP and user-level rate limiting |
-| **morgan** | HTTP request logging |
+
+| Technology                      | Role                                     |
+| ------------------------------- | ---------------------------------------- |
+| **Node.js** + **Express.js v5** | REST API server                          |
+| **Mongoose v8**                 | MongoDB ODM                              |
+| **jsonwebtoken**                | JWT access & refresh token signing       |
+| **bcryptjs**                    | Password hashing (cost factor 12)        |
+| **ioredis**                     | Redis client for token store & OTP cache |
+| **multer** + **multer-s3**      | File upload pipeline to AWS S3           |
+| **nodemailer** + **resend**     | Dual email provider (OTP, notifications) |
+| **helmet**                      | HTTP security headers                    |
+| **express-rate-limit**          | IP and user-level rate limiting          |
+| **morgan**                      | HTTP request logging                     |
 
 ### Infrastructure
-| Service | Role |
-|---|---|
-| **MongoDB Atlas** | Primary database |
-| **Redis** | Refresh token storage, OTP cache, rate limit counters |
-| **AWS S3** | Provider image and gallery storage |
-| **Vercel** | Frontend deployment with edge CDN |
-| **Railway** | Backend deployment |
+
+| Service           | Role                                                  |
+| ----------------- | ----------------------------------------------------- |
+| **MongoDB Atlas** | Primary database                                      |
+| **Redis**         | Refresh token storage, OTP cache, rate limit counters |
+| **AWS S3**        | Provider image and gallery storage                    |
+| **Vercel**        | Frontend deployment with edge CDN                     |
+| **Railway**       | Backend deployment                                    |
 
 ---
 
@@ -215,37 +223,37 @@ Session Recovery:     [GET /auth/status] → 401 → [POST /auth/refresh] → [N
 Logout:               [POST /auth/logout] → [Redis DEL] → [clearCookie x2]
 ```
 
-| Token | Expiry | Storage |
-|---|---|---|
-| Access Token (JWT) | **15 minutes** | `httpOnly` cookie |
+| Token               | Expiry                                    | Storage                   |
+| ------------------- | ----------------------------------------- | ------------------------- |
+| Access Token (JWT)  | **15 minutes**                            | `httpOnly` cookie         |
 | Refresh Token (JWT) | **7 days** (cookie) / **90 days** (Redis) | `httpOnly` cookie + Redis |
-| Registration OTP | **10 minutes** | Redis `reg-otp:{email}` |
-| Session OTP | **5 minutes** | Redis `otp:{userId}` |
+| Registration OTP    | **10 minutes**                            | Redis `reg-otp:{email}`   |
+| Session OTP         | **5 minutes**                             | Redis `otp:{userId}`      |
 
 ---
 
 ## 🚦 API Endpoints
 
-| Method | Route | Auth | Description |
-|---|---|---|---|
-| `POST` | `/api/auth/register/user` | Public | Register new user |
-| `POST` | `/api/auth/register/provider` | Public | Register new provider |
-| `POST` | `/api/auth/login/user` | Public | User login |
-| `POST` | `/api/auth/login/provider` | Public | Provider login |
-| `POST` | `/api/auth/logout` | 🔒 Auth | Logout + clear tokens |
-| `POST` | `/api/auth/refresh` | Public | Refresh access token |
-| `GET` | `/api/auth/status` | 🔒 Auth | Check session status |
-| `POST` | `/api/auth/send-registration-otp` | Public | Send email OTP for signup |
-| `POST` | `/api/auth/verify-registration-otp` | Public | Verify signup OTP |
-| `POST` | `/api/auth/forgot-password` | Public | Initiate password reset |
-| `POST` | `/api/auth/reset-password` | Public | Complete password reset |
-| `GET` | `/api/providers` | Public | List + filter providers |
-| `GET` | `/api/providers/:id` | Public | Provider public profile |
-| `GET` | `/api/services` | Public | All service categories |
-| `POST` | `/api/bookmarks` | 🔒 User | Bookmark a provider |
-| `POST` | `/api/reviews` | 🔒 User | Submit a review |
-| `GET` | `/api/admin/stats` | 🔒 Admin | Platform statistics |
-| `GET` | `/health` | Public | Server health check |
+| Method | Route                               | Auth     | Description               |
+| ------ | ----------------------------------- | -------- | ------------------------- |
+| `POST` | `/api/auth/register/user`           | Public   | Register new user         |
+| `POST` | `/api/auth/register/provider`       | Public   | Register new provider     |
+| `POST` | `/api/auth/login/user`              | Public   | User login                |
+| `POST` | `/api/auth/login/provider`          | Public   | Provider login            |
+| `POST` | `/api/auth/logout`                  | 🔒 Auth  | Logout + clear tokens     |
+| `POST` | `/api/auth/refresh`                 | Public   | Refresh access token      |
+| `GET`  | `/api/auth/status`                  | 🔒 Auth  | Check session status      |
+| `POST` | `/api/auth/send-registration-otp`   | Public   | Send email OTP for signup |
+| `POST` | `/api/auth/verify-registration-otp` | Public   | Verify signup OTP         |
+| `POST` | `/api/auth/forgot-password`         | Public   | Initiate password reset   |
+| `POST` | `/api/auth/reset-password`          | Public   | Complete password reset   |
+| `GET`  | `/api/providers`                    | Public   | List + filter providers   |
+| `GET`  | `/api/providers/:id`                | Public   | Provider public profile   |
+| `GET`  | `/api/services`                     | Public   | All service categories    |
+| `POST` | `/api/bookmarks`                    | 🔒 User  | Bookmark a provider       |
+| `POST` | `/api/reviews`                      | 🔒 User  | Submit a review           |
+| `GET`  | `/api/admin/stats`                  | 🔒 Admin | Platform statistics       |
+| `GET`  | `/health`                           | Public   | Server health check       |
 
 ---
 
@@ -284,6 +292,7 @@ homeserviceshub/
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js ≥ 18
 - MongoDB Atlas connection string
 - Redis instance (local or cloud)
@@ -306,6 +315,7 @@ cd ../server && npm install
 ### Environment Configuration
 
 **`server/.env`**
+
 ```env
 NODE_ENV=development
 PORT=5000
@@ -322,6 +332,7 @@ ADMIN_EMAIL=admin@yourdomain.com
 ```
 
 **`client/.env`**
+
 ```env
 VITE_API_URL=http://localhost:5000/api
 ```
@@ -374,6 +385,6 @@ Backend → `http://localhost:5000`
 
 © 2025 HomeServicesHub.in — All rights reserved.
 
-*Built with ❤️ to simplify home services for everyone.*
+_Built with ❤️ to simplify home services for everyone._
 
 </div>
